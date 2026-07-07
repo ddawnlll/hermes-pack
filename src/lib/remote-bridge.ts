@@ -6,7 +6,7 @@
  * Falls back to local desktop-fs when offline.
  */
 
-import { readDesktopFileText, isDesktopFsRemoteMode } from '@/lib/desktop-fs'
+import { readDesktopFileText, writeDesktopFileText, isDesktopFsRemoteMode } from '@/lib/desktop-fs'
 import { getLedgerPath, setLedgerPath } from '@/lib/ledger-reader'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -98,10 +98,8 @@ export class RemoteBridge {
   /** Write a file to the ledger (only in local mode) */
   async writeFile(relativePath: string, content: string): Promise<void> {
     this.ensureConnected()
-    // Use the existing write mechanism
-    const { writeFileText } = await import('@/lib/desktop-fs')
     const fullPath = `${getLedgerPath()}/${relativePath}`
-    await writeFileText(fullPath, content)
+    await writeDesktopFileText(fullPath, content)
   }
 
   // ── Gateway API ───────────────────────────────────────────────────────
