@@ -188,8 +188,8 @@ curl -fsSL https://raw.githubusercontent.com/ddawnlll/hermes-pack/main/install.s
 
 ## Available Adapters
 
-| Adapter | Setup Mode | Repo | Status |
-|---------|-----------|------|--------|
+| Adapter | Setup Mode | Target Repo | Status |
+|---------|-----------|-------------|--------|
 | `v7-alphaforge` | orchestrator | `ddawnlll/alphaforge-infa` | Active |
 | `designforge` | custom | `ddawnlll/designforge` | Active |
 | `money-radar` | custom | (coming soon) | Stub |
