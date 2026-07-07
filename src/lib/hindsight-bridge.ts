@@ -12,6 +12,8 @@ export interface RecallResult {
 
 const DEFAULT_HINDSIGHT_URL = 'http://localhost:9885'
 
+const HINDSIGHT_BANK = process.env.HINDSIGHT_BANK_ID || 'hermes'
+
 let hindsightUrl: string = DEFAULT_HINDSIGHT_URL
 
 /** Override the Hindsight API base URL. */
@@ -28,85 +30,72 @@ export function getHindsightUrl(): string {
 
 /**
  * Recall past memories matching the query string.
- * Calls GET /recall?q={query} on the Hindsight REST API.
- *
- * Returns an empty array on any error (graceful degradation).
+ * Calls POST /v1/default/banks/{bank}/memories/recall on the Hindsight REST API.
  */
 export async function recall(
   query: string,
 ): Promise<RecallResult[]> {
   try {
-    const url = `${hindsightUrl}/recall?q=${encodeURIComponent(query)}`
-    const response = await fetch(url)
+    const url = `${hindsightUrl}/v1/default/banks/${HINDSIGHT_BANK}/memories/recall`
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
+    })
 
     if (!response.ok) {
-      console.warn(
-        `[hindsight-bridge] recall returned ${response.status}`,
-      )
-
+      console.warn(`[hindsight-bridge] recall returned ${response.status}`)
       return []
     }
 
     const data: unknown = await response.json()
 
     if (!Array.isArray(data)) {
-      console.warn(
-        '[hindsight-bridge] recall response is not an array',
-      )
-
+      console.warn('[hindsight-bridge] recall response is not an array')
       return []
     }
 
     return data.map(normalizeRecallResult)
   } catch (err) {
     console.warn('[hindsight-bridge] recall error:', err)
-
     return []
   }
 }
 
 /**
  * Ask the Hindsight memory system a reflective question.
- * Calls GET /reflect?q={question} on the Hindsight REST API.
- *
- * Returns null on any error.
+ * Calls POST /v1/default/banks/{bank}/reflect on the Hindsight REST API.
  */
 export async function reflect(
   question: string,
 ): Promise<string | null> {
   try {
-    const url = `${hindsightUrl}/reflect?q=${encodeURIComponent(question)}`
-    const response = await fetch(url)
+    const url = `${hindsightUrl}/v1/default/banks/${HINDSIGHT_BANK}/reflect`
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: question }),
+    })
 
     if (!response.ok) {
-      console.warn(
-        `[hindsight-bridge] reflect returned ${response.status}`,
-      )
-
+      console.warn(`[hindsight-bridge] reflect returned ${response.status}`)
       return null
     }
 
     const data: unknown = await response.json()
 
-    if (typeof data === 'string') {
-      return data
-    }
+    if (typeof data === 'string') return data
 
-    // Some APIs wrap the reflection in an object
     if (data && typeof data === 'object') {
       const obj = data as Record<string, unknown>
-
-      if (typeof obj.answer === 'string') {return obj.answer}
-
-      if (typeof obj.result === 'string') {return obj.result}
-
-      if (typeof obj.reflection === 'string') {return obj.reflection}
+      if (typeof obj.answer === 'string') return obj.answer
+      if (typeof obj.result === 'string') return obj.result
+      if (typeof obj.reflection === 'string') return obj.reflection
     }
 
     return String(data)
   } catch (err) {
     console.warn('[hindsight-bridge] reflect error:', err)
-
     return null
   }
 }
