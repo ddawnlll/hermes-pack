@@ -1,0 +1,18 @@
+# Money Radar adapter stub — Hermes Orchestrator Pack
+# Placeholder for the opportunity discovery + evidence gate pipeline.
+# See: https://github.com/ddawnlll/money-radar (coming soon)
+project:
+  name: "MoneyRadar"
+  objective: "Internet opportunity discovery + evidence gate — find, verify, score money-making opportunities"
+  board_name: "money-radar"
+  board_desc: "Money Radar — opportunity discovery board"
+
+hermes:
+  setup_mode: "custom"
+  delivery: "local"
+  provider:
+    default: "opencode-go"
+    default_model: "deepseek-v4-flash"
+
+paths:
+  ledger: ".money-radar"

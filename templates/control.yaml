@@ -1,0 +1,13 @@
+# Human override / control plane. The orchestrator reads this at the start of
+# every tick; workers check it before long runs. Edit + save = next tick obeys.
+mode: paused                # paused | running | killed   (starts PAUSED on purpose)
+max_parallel_workers: __HERMES_MAX_PARALLEL_WORKERS__
+current_priority: ""
+human_instruction: ""       # free-text directive; orchestrator treats as top priority
+allowed_paths:
+__HERMES_ALLOWED_PATHS_YAML__
+forbidden_paths:
+__HERMES_FORBIDDEN_PATHS_YAML__
+merge_policy: __HERMES_MERGE_POLICY__
+max_llm_spend_per_day_usd: __HERMES_MAX_SPEND_PER_DAY__
+repo: __HERMES_REPO_DIR__

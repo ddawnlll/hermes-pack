@@ -1,0 +1,16 @@
+# DesignForge adapter for Hermes Orchestrator Pack
+project:
+  name: "DesignForge"
+  objective: "Design intelligence engine — URL ver → 10 saniyede redesign blueprint"
+  board_name: "designforge"
+  board_desc: "DesignForge orchestration & outreach pipeline"
+
+hermes:
+  setup_mode: "custom"
+  delivery: "local"
+  provider:
+    default: "opencode-go"
+    default_model: "deepseek-v4-flash"
+
+paths:
+  ledger: ".designforge"

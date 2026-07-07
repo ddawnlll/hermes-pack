@@ -1,0 +1,44 @@
+# V7/AlphaForge project adapter for Hermes Orchestrator Pack
+project:
+  name: "AlphaForge"
+  objective: "Make AlphaForge measurably better at finding robust, profitable alphas. 'Better' = evidence-backed improvement in at least one of: R-persistence rate, profit factor, Sharpe, OOS robustness, drawdown, false-positive rate, reproducibility."
+  board_name: "alphaforge"
+  board_desc: "V7/AlphaForge orchestration"
+
+hermes:
+  profile_orchestrator: "af-orchestrator"
+  profile_worker_prefix: "af-worker"
+  worker_count: 3
+  tick_name: "af-orchestrator-tick"
+  tick_schedule: "every 45m"
+  delivery: "local"
+
+  provider:
+    orchestrator: "anthropic"
+    orchestrator_model: "__NEEDS_LOCAL_VERIFICATION__"
+    worker: "openrouter"
+    worker_model: "__NEEDS_LOCAL_VERIFICATION__"
+
+paths:
+  ledger: ".alphaforge/orchestrator"
+
+boundaries:
+  allowed:
+    - "alphaforge/"
+    - "simulation/"
+    - "lib/"
+  forbidden:
+    - "runtime/"
+    - "exchange/"
+    - "risk/"
+
+merge_policy: "pr_only"
+max_parallel_workers: 3
+max_llm_spend_per_day_usd: 25
+
+runner:
+  command: |
+    python -m alphaforge.run --config {config} --out {ledger}/runs/{run_id}.json
+
+evidence:
+  required_fields: [run_id, metrics]

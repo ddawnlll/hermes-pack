@@ -1,0 +1,36 @@
+# Initial hypothesis families for V7/AlphaForge
+hypotheses:
+  - id: "h1-001"
+    family: "feature_engineering"
+    statement: "Adding rolling volatility normalization to raw price features improves R-persistence by 10% or more."
+    prediction: "Improvement in R-persistence rate >= 10%"
+    priority: 1
+    status: "open"
+
+  - id: "h1-002"
+    family: "feature_engineering"
+    statement: "Cross-sectional rank normalization of alpha factors reduces factor correlation and improves Sharpe."
+    prediction: "Factor correlation drops by >= 15%; Sharpe improves by >= 5%"
+    priority: 2
+    status: "open"
+
+  - id: "h2-001"
+    family: "portfolio_construction"
+    statement: "Volatility-targeting position sizing improves risk-adjusted returns over equal-weight."
+    prediction: "Sharpe ratio improves by >= 10% with no significant increase in max drawdown"
+    priority: 3
+    status: "open"
+
+  - id: "h2-002"
+    family: "portfolio_construction"
+    statement: "Adding a momentum overlay to the base alpha improves OOS robustness."
+    prediction: "OOS/IS Sharpe ratio > 0.7 (vs baseline < 0.5)"
+    priority: 4
+    status: "open"
+
+  - id: "h3-001"
+    family: "validation_methodology"
+    statement: "Permutation-test-based feature selection reduces false-positive rate compared to correlation-based selection."
+    prediction: "False-positive rate on synthetic null features drops by >= 50%"
+    priority: 5
+    status: "open"

@@ -1,0 +1,25 @@
+# Profile: orchestrator — strategist / judge / control plane.
+provider: __HERMES_ORCH_PROVIDER__
+model: __HERMES_ORCH_MODEL__
+
+delegation:
+  provider: __HERMES_WORKER_PROVIDER__
+  model: __HERMES_WORKER_MODEL__
+  max_concurrent_children: 3
+  max_spawn_depth: 1
+  max_iterations: 30
+
+goals:
+  max_turns: 20
+
+kanban:
+  dispatch_in_gateway: true
+  failure_limit: 2
+
+cron:
+  wrap_response: false
+
+auxiliary:
+  goal_judge:
+    provider: __HERMES_WORKER_PROVIDER__
+    model: __HERMES_WORKER_MODEL__

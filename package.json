@@ -1,0 +1,9 @@
+{
+  "name": "hermes-orchestrator-pack",
+  "version": "1.0.0",
+  "description": "Generic Hermes orchestration bootstrap pack",
+  "type": "module",
+  "dependencies": {
+    "js-yaml": "^5.2.1"
+  }
+}
