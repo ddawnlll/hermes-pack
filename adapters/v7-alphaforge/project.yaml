@@ -6,6 +6,7 @@ project:
   board_desc: "V7/AlphaForge orchestration"
 
 hermes:
+  setup_mode: "orchestrator"
   profile_orchestrator: "af-orchestrator"
   profile_worker_prefix: "af-worker"
   worker_count: 3
@@ -42,3 +43,70 @@ runner:
 
 evidence:
   required_fields: [run_id, metrics]
+
+# ── Praxis Evidence Gate Configuration ──────────────────────────────────
+praxis:
+  enabled: true
+  fail_closed: true
+  verify_command: ".alphaforge/orchestrator/scripts/praxis-verify.sh {run_id}"
+
+  required_artifacts:
+    - evidence_bundle.json
+    - diff.patch
+    - test_output.txt
+
+  schemas:
+    task_contract: ".alphaforge/orchestrator/schemas/task_contract.schema.json"
+    context_capsule: ".alphaforge/orchestrator/schemas/context_capsule.schema.json"
+    evidence_bundle: ".alphaforge/orchestrator/schemas/evidence_bundle.schema.json"
+    gate_result: ".alphaforge/orchestrator/schemas/gate_result.schema.json"
+
+  checks:
+    pre_tick:
+      - check_control.sh
+      - check_budget.py
+    post_worker:
+      - check_schema.py
+      - check_paths.py
+      - check_memory.py
+      - check_lineage.py
+      - check_negative_control.py
+      - check_metrics.py
+      - check_branch.py
+
+  memory_policy:
+    workers_can_write_memory: false
+    retain_only_after_gate: true
+    retain_source: "evidence_bundle"
+
+  gates:
+    t1:
+      enabled: true
+      model_profile: "af-orchestrator"
+    t2:
+      enabled: true
+      model_profile: "af-challenger"
+      read_only: true
+      blind: true  # T2 does NOT see T1's reasoning
+    t3:
+      enabled: true
+      model_profile: "af-arbiter"
+      read_only: true
+      on_disagreement_only: true
+    t4:
+      enabled: true
+      trigger_on: ["constitutional_change", "forbidden_path_violation", "critical_risk", "three_way_deadlock"]
+
+  risk_based_gating:
+    low:
+      gates: ["T1"]
+      challenger: false
+    medium:
+      gates: ["T1", "T2"]
+      confirm_required: true
+    high:
+      gates: ["T1", "T2", "T3"]
+      negative_control_required: true
+    critical:
+      gates: ["T1", "T2", "T3", "T4"]
+      human_always: true

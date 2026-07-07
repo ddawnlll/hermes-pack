@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ddawnlll/hermes-pack/templates/praxis/schemas/task_contract.schema.json",
+  "title": "Task Contract",
+  "description": "Describes a single bounded task for a Hermes worker sub-agent. The orchestrator builds this from the adapter config and the current hypothesis queue.",
+  "type": "object",
+  "required": [
+    "task_id", "objective", "allowed_paths", "forbidden_paths",
+    "required_context", "acceptance", "output_required",
+    "risk_level", "hypothesis_id"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "pattern": "^[A-Z]+-[A-Z]+-\\d{4}$",
+      "description": "Unique task identifier, e.g. AF-HYP-0042"
+    },
+    "hypothesis_id": {
+      "type": "string",
+      "description": "The hypothesis being tested, e.g. scalp-vol-breakout-017"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "description": "Risk classification. Controls gate depth: low=T1 only, medium=T1+T2, high=T1+T2+T3, critical=always T4"
+    },
+    "objective": {
+      "type": "string",
+      "description": "What the worker must accomplish, in measurable terms"
+    },
+    "allowed_paths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Glob patterns for files the worker may read and write"
+    },
+    "forbidden_paths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Glob patterns for files the worker MUST NOT touch"
+    },
+    "required_context": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Paths to files the worker must read before acting. The orchestrator verifies these were accessed."
+      },
+      "description": "Context files the worker must read before starting. Forms the 'Context Capsule'."
+    },
+    "runner": {
+      "type": "object",
+      "properties": {
+        "command": { "type": "string", "description": "Template for the deterministic runner command" },
+        "timeout_seconds": { "type": "integer", "default": 600 }
+      },
+      "description": "Optional deterministic runner configuration"
+    },
+    "acceptance": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of conditions that must be satisfied for the task to be accepted. Each is a checkable statement."
+    },
+    "output_required": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["evidence_bundle.json", "diff.patch", "test_output.txt", "uncertainty.md", "metrics.json"]
+      },
+      "description": "Artifacts the worker must produce"
+    },
+    "budget": {
+      "type": "object",
+      "properties": {
+        "max_llm_calls": { "type": "integer" },
+        "max_seconds": { "type": "integer" }
+      },
+      "description": "Budget constraints for this task"
+    },
+    "parent_task_id": {
+      "type": "string",
+      "description": "If this is a sub-task of a larger task, reference the parent"
+    }
+  }
+}

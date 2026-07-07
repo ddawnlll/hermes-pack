@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Pre-run gate for the orchestrator tick.
 # Emits {"wakeAgent": false} to skip the LLM entirely when there is nothing
-# to do: mode != running, or no worker activity since the last tick and no
-# free capacity to spawn new work.
+# to do. This is the PRE-TICK gate — it checks whether to wake the orchestrator.
+# Praxis (evidence gate) runs AFTER the worker produces output.
 set -u
 REPO="__HERMES_REPO_DIR__"
 LEDGER_DIR="__HERMES_LEDGER_DIR__"

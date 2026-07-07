@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ddawnlll/hermes-pack/templates/praxis/schemas/context_capsule.schema.json",
+  "title": "Context Capsule",
+  "description": "The bounded context package delivered to a sub-agent. Contains everything the agent is allowed to know and nothing else.",
+  "type": "object",
+  "required": [
+    "capsule_id", "created_at", "task_contract_ref",
+    "current_state_snapshot", "required_files", "instructions"
+  ],
+  "properties": {
+    "capsule_id": {
+      "type": "string",
+      "description": "Unique capsule identifier, derived from task_id + run timestamp"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the capsule was built"
+    },
+    "task_contract_ref": {
+      "type": "string",
+      "description": "Path to the task_contract.yaml this capsule is based on"
+    },
+    "current_state_snapshot": {
+      "type": "object",
+      "properties": {
+        "file": { "type": "string", "description": "Path to the current_state.md snapshot" },
+        "sha": { "type": "string", "description": "Git SHA of the snapshot for integrity" }
+      },
+      "required": ["file", "sha"],
+      "description": "A frozen reference to the canonical current state"
+    },
+    "required_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "purpose", "sha"],
+        "properties": {
+          "path": { "type": "string" },
+          "purpose": { "type": "string", "description": "Why this file matters" },
+          "sha": { "type": "string", "description": "Git SHA for integrity check" }
+        }
+      },
+      "description": "Files the agent must read before acting, with their verified SHAs"
+    },
+    "instructions": {
+      "type": "object",
+      "required": ["objective", "boundaries"],
+      "properties": {
+        "objective": { "type": "string" },
+        "boundaries": {
+          "type": "object",
+          "properties": {
+            "allowed_paths": { "type": "array", "items": { "type": "string" } },
+            "forbidden_paths": { "type": "array", "items": { "type": "string" } },
+            "forbidden_actions": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "e.g. 'Do not modify runtime/', 'Do not change public contracts'"
+            }
+          },
+          "required": ["allowed_paths", "forbidden_paths"]
+        },
+        "acceptance_criteria": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "evidence_schema_ref": {
+      "type": "string",
+      "description": "Path to the evidence_bundle.schema.json the worker's output must conform to"
+    },
+    "capsule_hash": {
+      "type": "string",
+      "description": "SHA-256 of the entire capsule for tamper evidence. Worker echoes this in their evidence bundle."
+    }
+  }
+}

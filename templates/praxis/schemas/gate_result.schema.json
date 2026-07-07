@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ddawnlll/hermes-pack/templates/praxis/schemas/gate_result.schema.json",
+  "title": "Gate Result (Praxis Verdict)",
+  "description": "Output of the Praxis verification pipeline. Produced by praxis-verify.sh after running all checks.",
+  "type": "object",
+  "required": [
+    "run_id", "status", "gate", "checked_at",
+    "checks_passed", "checks_failed", "next_action"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "description": "References the evidence bundle run_id"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["PASS", "FAIL", "BLOCKED", "ESCALATED"],
+      "description": "Overall gate verdict. PASS only if all enabled checks pass. BLOCKED = needs human. ESCALATED = forwarded to T3/T4."
+    },
+    "gate": {
+      "type": "string",
+      "enum": ["T0", "T0_pre", "T1", "T2", "T3", "T4", "praxis"],
+      "description": "Which gate produced this result"
+    },
+    "checked_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp"
+    },
+    "checks_passed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "check": { "type": "string" },
+          "detail": { "type": "string" }
+        },
+        "required": ["check"]
+      }
+    },
+    "checks_failed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["check", "message", "severity"],
+        "properties": {
+          "check": { "type": "string", "description": "Check name, e.g. 'evidence_schema' or 'forbidden_paths'" },
+          "message": { "type": "string", "description": "Human-readable failure detail" },
+          "severity": {
+            "type": "string",
+            "enum": ["error", "warn", "info"],
+            "description": "error = gate fails, warn = gate passes with note, info = informational"
+          }
+        }
+      }
+    },
+    "evidence_summary": {
+      "type": "object",
+      "properties": {
+        "total_claims": { "type": "integer" },
+        "claims_with_evidence": { "type": "integer" },
+        "claims_without_evidence": { "type": "integer" },
+        "files_changed": { "type": "integer" },
+        "forbidden_touches": { "type": "integer" },
+        "tests_run": { "type": "integer" },
+        "tests_passed": { "type": "integer" },
+        "tests_failed": { "type": "integer" }
+      },
+      "description": "Aggregate evidence statistics"
+    },
+    "next_action": {
+      "type": "string",
+      "enum": [
+        "proceed_t1", "proceed_t2", "proceed_t3", "proceed_t4",
+        "reject_without_llm", "reject_with_report",
+        "merge_candidate", "human_review", "retry_same_worker",
+        "escalate_unrecoverable"
+      ],
+      "description": "What the orchestrator should do next"
+    },
+    "memory_write_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "fact": { "type": "string" },
+          "source": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+        },
+        "required": ["fact", "source"]
+      },
+      "description": "Verified facts that can be safely written to canonical memory. Only populated on PASS."
+    }
+  }
+}

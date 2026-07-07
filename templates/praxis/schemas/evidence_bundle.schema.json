@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ddawnlll/hermes-pack/templates/praxis/schemas/evidence_bundle.schema.json",
+  "title": "Evidence Bundle",
+  "description": "Structured output from a Hermes worker sub-agent. Claims without evidence references are rejected by Praxis. This is the ONLY format accepted for agent completion.",
+  "type": "object",
+  "required": [
+    "run_id", "task_id", "hypothesis_id", "status",
+    "git", "context", "commands", "claims"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Z]+-RUN-\\d{8}-\\d{3,4}$",
+      "description": "Unique run identifier, e.g. AF-RUN-20260707-001"
+    },
+    "task_id": {
+      "type": "string",
+      "description": "References the task contract this bundle fulfills"
+    },
+    "hypothesis_id": {
+      "type": "string",
+      "description": "The hypothesis being tested"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["PASS", "PASS_WITH_NOTES", "FAIL", "PARTIAL", "BLOCKED"],
+      "description": "Worker's self-assessment of completion. Final status determined by Praxis + T-gates."
+    },
+    "git": {
+      "type": "object",
+      "required": ["base_sha", "head_sha", "branch"],
+      "properties": {
+        "base_sha": { "type": "string" },
+        "head_sha": { "type": "string" },
+        "branch": { "type": "string" },
+        "diff_path": { "type": "string", "description": "Path to the diff.patch artifact" }
+      },
+      "description": "Git state for traceability"
+    },
+    "context": {
+      "type": "object",
+      "required": ["capsule_hash", "required_context_read"],
+      "properties": {
+        "capsule_hash": {
+          "type": "string",
+          "description": "Must match the capsule_hash from the Context Capsule. Praxis rejects mismatch."
+        },
+        "required_context_read": {
+          "type": "boolean",
+          "description": "True if the worker read all required context files before acting"
+        }
+      },
+      "description": "Context integrity verification"
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim", "evidence"],
+        "properties": {
+          "claim": { "type": "string", "description": "A single factual or analytical claim" },
+          "confidence": {
+            "type": "string",
+            "enum": ["high", "medium", "low", "uncertain"],
+            "default": "medium"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "File path + line range, test name, or command output reference, e.g. 'simulation/costs.py:42-61' or 'tests/test_costs.py::test_fee_notional'"
+            },
+            "minItems": 1,
+            "description": "At least one evidence reference is required for each claim"
+          }
+        }
+      },
+      "description": "All claims made by the agent. Each claim MUST cite at least one evidence source."
+    },
+    "diff": {
+      "type": "object",
+      "properties": {
+        "changed_files": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "forbidden_files_touched": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Files the agent touched that are in the forbidden list. Praxis will FAIL if non-empty."
+        },
+        "total_additions": { "type": "integer" },
+        "total_deletions": { "type": "integer" }
+      },
+      "description": "Summary of code changes"
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["cmd", "exit_code"],
+        "properties": {
+          "cmd": { "type": "string" },
+          "exit_code": { "type": "integer" },
+          "stdout_path": { "type": "string", "description": "Path to captured stdout artifact" },
+          "duration_seconds": { "type": "number" }
+        }
+      },
+      "description": "All commands the agent ran, with exit codes. Every claim should be traceable to at least one command."
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Domain-specific metrics from the deterministic runner. Schema is adapter-defined.",
+      "additionalProperties": true
+    },
+    "data_lineage": {
+      "type": "object",
+      "properties": {
+        "train_end": { "type": "string", "description": "Date string for training window end" },
+        "oos_start": { "type": "string", "description": "Date string for OOS window start" },
+        "is_synthetic": { "type": "boolean", "default": false },
+        "data_source_hash": { "type": "string" }
+      },
+      "description": "Provenance of data used in the run"
+    },
+    "controls": {
+      "type": "object",
+      "properties": {
+        "negative_control_run": { "type": "boolean", "default": false },
+        "leakage_check_passed": { "type": "boolean", "default": false },
+        "reproducible": { "type": "boolean", "default": false },
+        "cross_validation_folds": { "type": "integer" }
+      },
+      "description": "Control experiment results. High-risk tasks require all to be true."
+    },
+    "uncertainties": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "issue": { "type": "string", "description": "What is unknown" },
+          "impact": { "type": "string", "enum": ["low", "medium", "high"] },
+          "safe_default_used": { "type": "string", "description": "What default/assumption was used instead" }
+        },
+        "required": ["issue", "impact"]
+      },
+      "description": "Honest reporting of uncertainties. Better than hallucinated certainty."
+    },
+    "validation": {
+      "type": "object",
+      "properties": {
+        "praxis_precheck": {
+          "type": "string",
+          "enum": ["NOT_CHECKED", "PASSED", "FAILED"],
+          "default": "NOT_CHECKED"
+        },
+        "orchestrator_verified": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "description": "Validation status fields. Set by Praxis, not by the worker."
+    }
+  }
+}
