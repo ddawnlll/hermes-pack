@@ -4959,10 +4959,9 @@ async function buildRemoteConnection(rawUrl, authMode, token, source) {
   }
 
   if (!token) {
-    throw new Error(
-      'Remote Hermes gateway is selected, but no session token is saved. ' +
-        'Open Settings → Gateway and save a token, or switch back to Local.'
-    )
+    // Allow null token when gateway doesn't require auth.
+    // Session token will be auto-discovered from the gateway's HTML at runtime.
+    console.info('[main] No session token saved; connecting without auth.')
   }
 
   return {
@@ -4998,13 +4997,29 @@ async function resolveRemoteBackend(profile) {
   const rawEnvUrl = process.env.HERMES_DESKTOP_REMOTE_URL
   const rawEnvToken = process.env.HERMES_DESKTOP_REMOTE_TOKEN
   if (rawEnvUrl) {
-    if (!rawEnvToken) {
-      throw new Error(
-        'HERMES_DESKTOP_REMOTE_URL is set but HERMES_DESKTOP_REMOTE_TOKEN is not. ' +
-          'Both must be provided to connect to a remote Hermes backend.'
-      )
+    // If no token provided, probe /api/status to check if auth is required
+    let effectiveToken = rawEnvToken || null
+    let effectiveAuthMode = 'token'
+    if (!effectiveToken) {
+      try {
+        const probeRes = await fetch(`${rawEnvUrl}/api/status`, { signal: AbortSignal.timeout(5000) })
+        if (probeRes.ok) {
+          const probe = await probeRes.json()
+          if (probe.auth_required) {
+            throw new Error(
+              'HERMES_DESKTOP_REMOTE_URL is set but HERMES_DESKTOP_REMOTE_TOKEN is not. ' +
+                'The remote gateway requires authentication (auth_required: true). ' +
+                'Set HERMES_DESKTOP_REMOTE_TOKEN.'
+            )
+          }
+          effectiveAuthMode = 'token'
+        }
+      } catch (err) {
+        if (err.message && err.message.includes('auth_required: true')) throw err
+        // If probe fails, try connecting anyway — will fail with auth error if needed
+      }
     }
-    return buildRemoteConnection(rawEnvUrl, 'token', rawEnvToken, 'env')
+    return buildRemoteConnection(rawEnvUrl, effectiveAuthMode, effectiveToken, 'env')
   }
 
   // 3. Global remote.

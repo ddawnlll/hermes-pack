@@ -145,6 +145,7 @@ const SkillsView = lazy(async () => ({ default: (await import('./skills')).Skill
 
 // ── AlphaForge Mission Control views ──
 const MissionControlView = lazy(async () => ({ default: (await import('./mission-control')).MissionControlView }))
+const MissionControlContainer = lazy(async () => ({ default: (await import('./mission-control/container')).MissionControlContainer }))
 const ControlPlaneView = lazy(async () => ({ default: (await import('./control-plane')).ControlPlaneView }))
 const KanbanView = lazy(async () => ({ default: (await import('./kanban')).KanbanView }))
 const ReportsView = lazy(async () => ({ default: (await import('./reports')).ReportsView }))
@@ -1352,7 +1353,7 @@ export function DesktopController() {
           <Route
             element={
               <Suspense fallback={null}>
-                <MissionControlView />
+                <MissionControlContainer />
               </Suspense>
             }
             path="mission-control"
