@@ -1,0 +1,18 @@
+lockVersion: praxis-plan-lock/v0.1
+planSpecVersion: 0.1.0
+kind: ImplementationPlan
+profile: praxis-v0.1
+planId: HERMES-17
+title: Cross-project transfer (P3)
+createdAt: 2026-07-08T12:00:00Z
+updatedAt: 2026-07-08T10:24:36.244Z
+hashes:
+  planHash: 9e520979ddad682084269dea6a548bc49c8d813c505f8101428b7f40d0955dfa
+  acceptanceCriteriaHash: ede814a267bd9e06016c0dbec82c801ecf1a205bcc1153ab4ce94592ab15eaf7
+  artifactPolicyHash: 53b49b901def2e2afbc29fcb3be07befe1d50c1015c55e0953cba439444a17c7
+  integrationContractHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  commandPolicyHash: 7685c14763c960a308545b13526aed20eeb80e9ea8ab340992d280c0a0241828
+  allowedFilesHash: f8d1242c61f3f9b4f4cb5b7fa126b73d9f5dfd10fb8c72b7b2c04c73632678a8
+  forbiddenFilesHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+source:
+  schemaPath: schemas/planspec.v0.1.schema.yaml

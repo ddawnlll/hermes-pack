@@ -1,0 +1,115 @@
+{
+  "verdict": "PASS",
+  "ok": true,
+  "attemptId": "hermes-issue-7",
+  "planId": "HERMES-7",
+  "planTitle": "events.jsonl",
+  "startedAt": "2026-07-08T10:25:09.062Z",
+  "finishedAt": "2026-07-08T10:25:09.498Z",
+  "gateVerdicts": [
+    {
+      "gateName": "SchemaGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "SCHEMA_PASS"
+      ]
+    },
+    {
+      "gateName": "LockGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "LOCK_PASS"
+      ]
+    },
+    {
+      "gateName": "EvidenceGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "EVIDENCE_PASS"
+      ]
+    },
+    {
+      "gateName": "WiringGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "WIRING_PASS"
+      ]
+    },
+    {
+      "gateName": "ExecGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "COMMAND_SUCCEEDED",
+        "EXEC_PASS"
+      ]
+    },
+    {
+      "gateName": "FinalGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "FILE_FOUND",
+        "ALL_CRITERIA_MET"
+      ]
+    }
+  ],
+  "totalGates": 6,
+  "passedGates": 6,
+  "heldGates": 0,
+  "failedGates": 0,
+  "diagnostics": [
+    {
+      "code": "INVALID_GATE_SEQUENCE",
+      "severity": "warning",
+      "message": "Gates reasonCodes should include key \"LockGate\".",
+      "gate": "LockGate"
+    },
+    {
+      "code": "INVALID_GATE_SEQUENCE",
+      "severity": "warning",
+      "message": "Gates reasonCodes should include key \"WiringGate\".",
+      "gate": "WiringGate"
+    },
+    {
+      "code": "MISSING_REQUIRED_HASH_FIELD",
+      "severity": "warning",
+      "message": "Locking hashes should include \"integrationContractHash\".",
+      "path": "/locking/hashes"
+    }
+  ],
+  "final": {
+    "totalCriteria": 2,
+    "passedCriteria": 2,
+    "failedCriteria": 0,
+    "advisoryCriteria": 0,
+    "criterionResults": [
+      {
+        "criterionId": "AC-1",
+        "taskId": "task-7",
+        "verdict": "PASS",
+        "reasonCodes": [
+          "FILE_FOUND"
+        ],
+        "evidenceRefs": [
+          "source"
+        ],
+        "detail": "File \"schema/events.schema.json\" exists on disk.",
+        "skipped": false,
+        "advisory": false
+      },
+      {
+        "criterionId": "AC-2",
+        "taskId": "task-7",
+        "verdict": "PASS",
+        "reasonCodes": [
+          "FILE_FOUND"
+        ],
+        "evidenceRefs": [
+          "source"
+        ],
+        "detail": "File \"bootstrap.ts\" exists on disk.",
+        "skipped": false,
+        "advisory": false
+      }
+    ]
+  }
+}

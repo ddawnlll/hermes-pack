@@ -1,0 +1,231 @@
+{
+  "verdict": "FAIL",
+  "ok": false,
+  "attemptId": "run-1783502951324",
+  "planId": "unknown",
+  "planTitle": "",
+  "startedAt": "2026-07-08T09:29:11.434Z",
+  "finishedAt": "2026-07-08T09:29:11.622Z",
+  "gateVerdicts": [
+    {
+      "gateName": "SchemaGate",
+      "verdict": "FAIL",
+      "reasonCodes": [
+        "PLAN_SCHEMA_INVALID"
+      ],
+      "repairHint": "Fix PlanSpec YAML syntax, schema violations, or semantic errors listed in diagnostics."
+    }
+  ],
+  "totalGates": 1,
+  "passedGates": 0,
+  "heldGates": 0,
+  "failedGates": 1,
+  "diagnostics": [
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must have required property 'planSpecVersion'",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "planSpecVersion"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must have required property 'kind'",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "kind"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must have required property 'profile'",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "profile"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must have required property 'metadata'",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "metadata"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must have required property 'authority'",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "authority"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must have required property 'workspace'",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "workspace"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must have required property 'execution'",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "execution"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must have required property 'tasks'",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "tasks"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must have required property 'commands'",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "commands"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must have required property 'gates'",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "gates"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must have required property 'repair'",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "repair"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must have required property 'locking'",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "locking"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must have required property 'reports'",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "reports"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must NOT have additional properties",
+      "details": {
+        "keyword": "additionalProperties",
+        "params": {
+          "additionalProperty": "plan"
+        },
+        "schemaPath": "#/additionalProperties"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must NOT have additional properties",
+      "details": {
+        "keyword": "additionalProperties",
+        "params": {
+          "additionalProperty": "acceptance_criteria"
+        },
+        "schemaPath": "#/additionalProperties"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "must NOT have additional properties",
+      "details": {
+        "keyword": "additionalProperties",
+        "params": {
+          "additionalProperty": "provider"
+        },
+        "schemaPath": "#/additionalProperties"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/evidence: must be object",
+      "path": "/evidence",
+      "details": {
+        "keyword": "type",
+        "params": {
+          "type": "object"
+        },
+        "schemaPath": "#/type"
+      }
+    }
+  ],
+  "final": null
+}

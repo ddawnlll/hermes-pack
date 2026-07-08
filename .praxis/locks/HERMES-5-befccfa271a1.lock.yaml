@@ -1,0 +1,18 @@
+lockVersion: praxis-plan-lock/v0.1
+planSpecVersion: 0.1.0
+kind: ImplementationPlan
+profile: praxis-v0.1
+planId: HERMES-5
+title: Provider fallback router
+createdAt: 2026-07-08T12:00:00Z
+updatedAt: 2026-07-08T10:25:07.362Z
+hashes:
+  planHash: befccfa271a1a043332f90ca1b53a80f82cc12c6aa3ce3edf4b54d8c195b1f68
+  acceptanceCriteriaHash: fa8d5999453f90c9567fb82d11e0d167f125675c5e4e1ee95c685cd3c79be0dc
+  artifactPolicyHash: 0d2610f2c21c75552603f6733387eb7667860ca634ad031868a0993e6398f807
+  integrationContractHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  commandPolicyHash: 75d08297c13b3946221b521afa474df7422f480735c5519a167fe2405b6a82f9
+  allowedFilesHash: 1039606233eb8cadaae873aa3e95306a6cb49a93e0ff4b5881a6651367298640
+  forbiddenFilesHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+source:
+  schemaPath: schemas/planspec.v0.1.schema.yaml

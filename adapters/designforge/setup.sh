@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# DesignForge adapter setup — called by hermes-pack bootstrap.sh
+# DesignForge adapter setup — called by Hephaestus bootstrap.sh
 # Args: <repo-dir> <adapter-name> <dry-run> <hermes-root> <pack-dir> <adapter-dir>
 # ============================================================================
 set -euo pipefail

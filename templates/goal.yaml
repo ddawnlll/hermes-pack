@@ -1,0 +1,29 @@
+# Eternal Goal Configuration
+# This file defines the project's never-stopping improvement goal.
+# schema_version must match goal.schema.json
+schema_version: 1
+goal_type: eternal
+statement: "__HERMES_OBJECTIVE__"
+
+# Machine-verifiable success criteria (not LLM declarations)
+success_criteria:
+  - kind: praxis_gate
+    gate: finalGate
+  - kind: metric
+    source: runs/*.json
+    field: sharpe_oos
+    op: ">="
+    value: 1.4
+
+# Rules that prevent the system from stopping
+never_stop_rules:
+  min_open_hypotheses: 5
+  exhaustion_policy: generate_ideas  # never "stop" — always generate new ideas
+
+# Conditions that MAY stop goal pursuit (safety valves)
+stop_conditions:
+  - budget_exhausted
+  - mode:killed
+  - human_gate_pending>72h
+
+goal_status: in_progress

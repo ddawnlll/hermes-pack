@@ -1,0 +1,184 @@
+{
+  "verdict": "HOLD",
+  "ok": false,
+  "attemptId": "run-1783503691342",
+  "planId": "HERMES-ISSUE-001",
+  "planTitle": "Versiyonlu şema sözleşmesi (state/control/goal/ideas/events + doğrulama)",
+  "startedAt": "2026-07-08T09:41:31.495Z",
+  "finishedAt": "2026-07-08T09:41:31.911Z",
+  "gateVerdicts": [
+    {
+      "gateName": "SchemaGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "SCHEMA_PASS"
+      ]
+    },
+    {
+      "gateName": "LockGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "LOCK_CREATED"
+      ]
+    },
+    {
+      "gateName": "EvidenceGate",
+      "verdict": "HOLD",
+      "reasonCodes": [
+        "EVIDENCE_LEDGER_MISSING"
+      ],
+      "repairHint": "No evidence ledger provided. Execute the plan or provide evidence records."
+    },
+    {
+      "gateName": "WiringGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "WIRING_PASS"
+      ]
+    },
+    {
+      "gateName": "ExecGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "COMMAND_SUCCEEDED",
+        "EXEC_PASS"
+      ]
+    },
+    {
+      "gateName": "FinalGate",
+      "verdict": "HOLD",
+      "reasonCodes": [
+        "FILE_FOUND",
+        "CRITERION_PASS",
+        "CRITERIA_PARTIAL"
+      ],
+      "repairHint": "All criteria passed but one or more prior gates returned HOLD. Resolve prior gate issues first."
+    }
+  ],
+  "totalGates": 6,
+  "passedGates": 4,
+  "heldGates": 2,
+  "failedGates": 0,
+  "diagnostics": [
+    {
+      "code": "INVALID_GATE_SEQUENCE",
+      "severity": "warning",
+      "message": "Gates reasonCodes should include key \"LockGate\".",
+      "gate": "LockGate"
+    },
+    {
+      "code": "INVALID_GATE_SEQUENCE",
+      "severity": "warning",
+      "message": "Gates reasonCodes should include key \"WiringGate\".",
+      "gate": "WiringGate"
+    },
+    {
+      "code": "MISSING_REQUIRED_HASH_FIELD",
+      "severity": "warning",
+      "message": "Locking hashes should include \"integrationContractHash\".",
+      "path": "/locking/hashes"
+    },
+    {
+      "code": "LOCK_CREATED",
+      "severity": "info",
+      "message": "Lock file created at .praxis/locks/current.lock.yaml."
+    },
+    {
+      "code": "PRIOR_GATE_HOLD",
+      "severity": "warning",
+      "message": "One or more prior gates returned HOLD. FinalGate will evaluate criteria but overall pipeline is HOLD."
+    }
+  ],
+  "final": {
+    "totalCriteria": 6,
+    "passedCriteria": 6,
+    "failedCriteria": 0,
+    "advisoryCriteria": 0,
+    "criterionResults": [
+      {
+        "criterionId": "AC-1",
+        "taskId": "task-schema-contract",
+        "verdict": "PASS",
+        "reasonCodes": [
+          "FILE_FOUND"
+        ],
+        "evidenceRefs": [
+          "source"
+        ],
+        "detail": "File \"schema/state.schema.json\" exists on disk.",
+        "skipped": false,
+        "advisory": false
+      },
+      {
+        "criterionId": "AC-2",
+        "taskId": "task-schema-contract",
+        "verdict": "PASS",
+        "reasonCodes": [
+          "CRITERION_PASS"
+        ],
+        "evidenceRefs": [
+          "command-CMD-TEST-SCHEMA"
+        ],
+        "detail": "All test commands passed. Command \"CMD-TEST-SCHEMA\" tests: 26/26 passed.",
+        "skipped": false,
+        "advisory": false
+      },
+      {
+        "criterionId": "AC-3",
+        "taskId": "task-schema-contract",
+        "verdict": "PASS",
+        "reasonCodes": [
+          "CRITERION_PASS"
+        ],
+        "evidenceRefs": [
+          "command-CMD-TEST-SCHEMA"
+        ],
+        "detail": "All test commands passed. Command \"CMD-TEST-SCHEMA\" tests: 26/26 passed.",
+        "skipped": false,
+        "advisory": false
+      },
+      {
+        "criterionId": "AC-4",
+        "taskId": "task-schema-contract",
+        "verdict": "PASS",
+        "reasonCodes": [
+          "FILE_FOUND"
+        ],
+        "evidenceRefs": [
+          "source"
+        ],
+        "detail": "File \"README.md\" exists on disk.",
+        "skipped": false,
+        "advisory": false
+      },
+      {
+        "criterionId": "AC-5",
+        "taskId": "task-schema-contract",
+        "verdict": "PASS",
+        "reasonCodes": [
+          "CRITERION_PASS"
+        ],
+        "evidenceRefs": [
+          "command-CMD-CHECK-STATE"
+        ],
+        "detail": "All test commands passed. Command \"CMD-CHECK-STATE\" succeeded (exitCode=0).",
+        "skipped": false,
+        "advisory": false
+      },
+      {
+        "criterionId": "AC-6",
+        "taskId": "task-schema-contract",
+        "verdict": "PASS",
+        "reasonCodes": [
+          "CRITERION_PASS"
+        ],
+        "evidenceRefs": [
+          "command-CMD-TEST-SCHEMA"
+        ],
+        "detail": "All test commands passed. Command \"CMD-TEST-SCHEMA\" tests: 26/26 passed.",
+        "skipped": false,
+        "advisory": false
+      }
+    ]
+  }
+}

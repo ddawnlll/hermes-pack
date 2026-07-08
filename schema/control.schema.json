@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ddawnlll/hephaestus/schema/control.schema.json",
+  "title": "Hermes Control Schema",
+  "description": "Versioned schema for control.yaml — the human control plane for Hermes orchestrator.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "description": "Schema version number.",
+      "minimum": 1,
+      "default": 1
+    },
+    "mode": {
+      "type": "string",
+      "description": "Orchestrator mode. paused = stop on next tick, running = normal operation, killed = hard stop.",
+      "enum": ["paused", "running", "killed"],
+      "default": "paused"
+    },
+    "max_parallel_workers": {
+      "type": "integer",
+      "description": "Maximum number of worker tasks running in parallel.",
+      "minimum": 1,
+      "default": 3
+    },
+    "current_priority": {
+      "type": "string",
+      "description": "Optional priority directive for the orchestrator.",
+      "default": ""
+    },
+    "human_instruction": {
+      "type": "string",
+      "description": "Free-text instruction from human operator; orchestrator treats as top priority.",
+      "default": ""
+    },
+    "allowed_paths": {
+      "type": "array",
+      "description": "File paths the orchestrator/workers are allowed to modify.",
+      "items": { "type": "string" },
+      "default": ["src/"]
+    },
+    "forbidden_paths": {
+      "type": "array",
+      "description": "File paths the orchestrator/workers must never modify.",
+      "items": { "type": "string" },
+      "default": ["vendor/"]
+    },
+    "merge_policy": {
+      "type": "string",
+      "description": "Merge policy: pr_only = always create PR, direct = merge directly to main.",
+      "enum": ["pr_only", "direct"],
+      "default": "pr_only"
+    },
+    "max_llm_spend_per_day_usd": {
+      "type": "number",
+      "description": "Daily maximum LLM spend in USD.",
+      "minimum": 0,
+      "default": 25
+    },
+    "repo": {
+      "type": "string",
+      "description": "Absolute path to the project repository.",
+      "default": ""
+    },
+    "risk_based_gating": {
+      "type": "object",
+      "description": "Risk-based gating configuration per risk level.",
+      "properties": {
+        "low": {
+          "type": "object",
+          "properties": {
+            "gates": { "type": "array", "items": { "type": "string" }, "default": ["T1"] },
+            "challenger": { "type": "boolean", "default": false }
+          },
+          "additionalProperties": false
+        },
+        "medium": {
+          "type": "object",
+          "properties": {
+            "gates": { "type": "array", "items": { "type": "string" }, "default": ["T1", "T2"] },
+            "confirm_required": { "type": "boolean", "default": true }
+          },
+          "additionalProperties": false
+        },
+        "high": {
+          "type": "object",
+          "properties": {
+            "gates": { "type": "array", "items": { "type": "string" }, "default": ["T1", "T2", "T3"] },
+            "praxis_final_required": { "type": "boolean", "default": true }
+          },
+          "additionalProperties": false
+        },
+        "critical": {
+          "type": "object",
+          "properties": {
+            "gates": { "type": "array", "items": { "type": "string" }, "default": ["T1", "T2", "T3", "T4"] },
+            "human_always": { "type": "boolean", "default": true }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["schema_version", "mode"],
+  "additionalProperties": false
+}

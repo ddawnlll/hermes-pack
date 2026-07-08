@@ -1,7 +1,17 @@
 {
+  "schema_version": 1,
   "tick": 0,
-  "active_branches": {},
+  "worker_status": {},
   "spend_today_usd": 0,
+  "budget_usd": 25,
   "last_tick_at": null,
-  "board": "__HERMES_BOARD_NAME__"
+  "board": "__HERMES_BOARD_NAME__",
+  "gates": {
+    "T0": 0,
+    "T1": 0,
+    "T2": 0,
+    "T3": 0,
+    "T4": 0
+  },
+  "goal_status": "none"
 }

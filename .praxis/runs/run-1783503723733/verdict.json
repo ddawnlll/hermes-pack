@@ -1,0 +1,118 @@
+{
+  "verdict": "FAIL",
+  "ok": false,
+  "attemptId": "run-1783503723733",
+  "planId": "HERMES-ISSUE-001",
+  "planTitle": "Versiyonlu şema sözleşmesi (state/control/goal/ideas/events + doğrulama)",
+  "startedAt": "2026-07-08T09:42:03.856Z",
+  "finishedAt": "2026-07-08T09:42:04.072Z",
+  "gateVerdicts": [
+    {
+      "gateName": "SchemaGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "SCHEMA_PASS"
+      ]
+    },
+    {
+      "gateName": "LockGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "LOCK_PASS"
+      ]
+    },
+    {
+      "gateName": "EvidenceGate",
+      "verdict": "FAIL",
+      "reasonCodes": [
+        "EVIDENCE_LEDGER_PARSE_ERROR"
+      ],
+      "repairHint": "Evidence ledger parse error. Check file format and retry."
+    }
+  ],
+  "totalGates": 3,
+  "passedGates": 2,
+  "heldGates": 0,
+  "failedGates": 1,
+  "diagnostics": [
+    {
+      "code": "INVALID_GATE_SEQUENCE",
+      "severity": "warning",
+      "message": "Gates reasonCodes should include key \"LockGate\".",
+      "gate": "LockGate"
+    },
+    {
+      "code": "INVALID_GATE_SEQUENCE",
+      "severity": "warning",
+      "message": "Gates reasonCodes should include key \"WiringGate\".",
+      "gate": "WiringGate"
+    },
+    {
+      "code": "MISSING_REQUIRED_HASH_FIELD",
+      "severity": "warning",
+      "message": "Locking hashes should include \"integrationContractHash\".",
+      "path": "/locking/hashes"
+    },
+    {
+      "code": "EVIDENCE_MISSING_REQUIRED_FIELD",
+      "severity": "error",
+      "message": "Line 1: missing or empty required field \"attemptId\"."
+    },
+    {
+      "code": "EVIDENCE_MISSING_REQUIRED_FIELD",
+      "severity": "error",
+      "message": "Line 2: missing or empty required field \"attemptId\"."
+    },
+    {
+      "code": "EVIDENCE_MISSING_REQUIRED_FIELD",
+      "severity": "error",
+      "message": "Line 3: missing or empty required field \"attemptId\"."
+    },
+    {
+      "code": "EVIDENCE_MISSING_REQUIRED_FIELD",
+      "severity": "error",
+      "message": "Line 4: missing or empty required field \"attemptId\"."
+    },
+    {
+      "code": "EVIDENCE_MISSING_REQUIRED_FIELD",
+      "severity": "error",
+      "message": "Line 5: missing or empty required field \"attemptId\"."
+    },
+    {
+      "code": "EVIDENCE_MISSING_REQUIRED_FIELD",
+      "severity": "error",
+      "message": "Line 6: missing or empty required field \"attemptId\"."
+    },
+    {
+      "code": "EVIDENCE_MISSING_REQUIRED_FIELD",
+      "severity": "error",
+      "message": "Line 7: missing or empty required field \"attemptId\"."
+    },
+    {
+      "code": "EVIDENCE_MISSING_REQUIRED_FIELD",
+      "severity": "error",
+      "message": "Line 8: missing or empty required field \"attemptId\"."
+    },
+    {
+      "code": "EVIDENCE_MISSING_REQUIRED_FIELD",
+      "severity": "error",
+      "message": "Line 9: missing or empty required field \"attemptId\"."
+    },
+    {
+      "code": "EVIDENCE_MISSING_REQUIRED_FIELD",
+      "severity": "error",
+      "message": "Line 10: missing or empty required field \"attemptId\"."
+    },
+    {
+      "code": "EVIDENCE_MISSING_REQUIRED_FIELD",
+      "severity": "error",
+      "message": "Line 11: missing or empty required field \"attemptId\"."
+    },
+    {
+      "code": "EVIDENCE_MISSING_REQUIRED_FIELD",
+      "severity": "error",
+      "message": "Line 12: missing or empty required field \"attemptId\"."
+    }
+  ],
+  "final": null
+}

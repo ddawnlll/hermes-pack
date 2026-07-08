@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ddawnlll/hephaestus/schema/goal.schema.json",
+  "title": "Hermes Goal Schema",
+  "description": "Versioned schema for goal.yaml — defines the eternal/measurable improvement goal.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "description": "Schema version number.",
+      "minimum": 1,
+      "default": 1
+    },
+    "goal_type": {
+      "type": "string",
+      "description": "Type of goal: eternal (never stop, generate ideas when empty), gate_target (achieve specific gate pass), metric_target (reach measurable threshold).",
+      "enum": ["eternal", "gate_target", "metric_target"],
+      "default": "eternal"
+    },
+    "statement": {
+      "type": "string",
+      "description": "Human-readable goal statement.",
+      "default": ""
+    },
+    "success_criteria": {
+      "type": "array",
+      "description": "Machine-verifiable success criteria (not LLM declarations).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["praxis_gate", "metric"],
+            "description": "Type of criterion: praxis_gate (gate must PASS) or metric (field comparison)."
+          },
+          "gate": {
+            "type": "string",
+            "description": "Gate name (for praxis_gate kind)."
+          },
+          "source": {
+            "type": "string",
+            "description": "Metric source glob pattern (for metric kind), e.g. runs/*.json."
+          },
+          "field": {
+            "type": "string",
+            "description": "Field path in the source JSON (for metric kind)."
+          },
+          "op": {
+            "type": "string",
+            "enum": [">=", "<=", ">", "<", "==", "!="],
+            "description": "Comparison operator (for metric kind)."
+          },
+          "value": {
+            "type": ["number", "string"],
+            "description": "Comparison value (for metric kind)."
+          }
+        },
+        "required": ["kind"],
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "never_stop_rules": {
+      "type": "object",
+      "description": "Rules that prevent the system from stopping — it generates ideas instead.",
+      "properties": {
+        "min_open_hypotheses": {
+          "type": "integer",
+          "description": "Minimum number of open hypotheses before triggering Ideas Engine.",
+          "minimum": 1,
+          "default": 5
+        },
+        "exhaustion_policy": {
+          "type": "string",
+          "description": "What to do when work is exhausted: generate_ideas, wait, or stop.",
+          "enum": ["generate_ideas", "wait", "stop"],
+          "default": "generate_ideas"
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "stop_conditions": {
+      "type": "array",
+      "description": "Conditions that MAY stop goal pursuit (safety valves).",
+      "items": {
+        "type": "string",
+        "enum": ["budget_exhausted", "mode:killed", "human_gate_pending>72h", "family_exhausted"]
+      },
+      "default": []
+    },
+    "goal_status": {
+      "type": "string",
+      "description": "Current status of this goal.",
+      "enum": ["in_progress", "achieved", "blocked", "exhausted"],
+      "default": "in_progress"
+    }
+  },
+  "required": ["schema_version", "goal_type", "statement"],
+  "additionalProperties": false
+}

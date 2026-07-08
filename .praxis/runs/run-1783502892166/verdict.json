@@ -1,0 +1,31 @@
+{
+  "verdict": "FAIL",
+  "ok": false,
+  "attemptId": "run-1783502892166",
+  "planId": "unknown",
+  "planTitle": "",
+  "startedAt": "2026-07-08T09:28:12.358Z",
+  "finishedAt": "2026-07-08T09:28:12.385Z",
+  "gateVerdicts": [
+    {
+      "gateName": "SchemaGate",
+      "verdict": "FAIL",
+      "reasonCodes": [
+        "PLAN_SCHEMA_LOAD_ERROR"
+      ],
+      "repairHint": "Fix PlanSpec YAML syntax, schema violations, or semantic errors listed in diagnostics."
+    }
+  ],
+  "totalGates": 1,
+  "passedGates": 0,
+  "heldGates": 0,
+  "failedGates": 1,
+  "diagnostics": [
+    {
+      "code": "PLAN_SCHEMA_LOAD_ERROR",
+      "severity": "error",
+      "message": "Failed to read schema file at C:\\Users\\dresden\\Documents\\hermes-pack\\schemas\\planspec.v0.1.schema.yaml: ENOENT: no such file or directory, open 'C:\\Users\\dresden\\Documents\\hermes-pack\\schemas\\planspec.v0.1.schema.yaml'"
+    }
+  ],
+  "final": null
+}

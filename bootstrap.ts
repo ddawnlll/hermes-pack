@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Hermes Orchestrator Pack — generic bootstrap
+ * Hephaestus — generic bootstrap
  * Idempotent: safe to re-run after editing templates or adapters.
  *
  * Usage:
@@ -12,7 +12,7 @@
 import { existsSync, mkdirSync, cpSync, readdirSync } from "fs";
 import { join, dirname, resolve } from "path";
 import { fileURLToPath } from "url";
-import { load as yamlLoad } from "js-yaml";
+import { load as yamlLoad, dump as yamlDump } from "js-yaml";
 
 // ─── Paths ──────────────────────────────────────────────────────────────────
 
@@ -24,6 +24,12 @@ const HERMES_SCRIPTS = join(
   ".hermes",
   "scripts",
 );
+
+const HEPHAESTUS_DIR = join(
+  process.env.HOME || process.env.USERPROFILE || "~",
+  ".hephaestus",
+);
+const REGISTRY_PATH = join(HEPHAESTUS_DIR, "registry.yaml");
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -46,6 +52,14 @@ interface AdapterConfig {
       orchestrator_model: string;
       worker: string;
       worker_model: string;
+      // Provider chains for LiteLLM fallback ("never-dies" guarantee)
+      // Each chain ends with a local model (Ollama/LM Studio)
+      orchestrator_chain?: string[];
+      worker_chain?: string[];
+      challenger_model?: string;
+      challenger_chain?: string[];
+      arbiter_model?: string;
+      arbiter_chain?: string[];
     };
   };
   paths: { ledger: string };
@@ -81,6 +95,26 @@ const DEFAULTS: AdapterConfig = {
       orchestrator_model: "__NEEDS_LOCAL_VERIFICATION__",
       worker: "openrouter",
       worker_model: "__NEEDS_LOCAL_VERIFICATION__",
+      orchestrator_chain: [
+        "claude-sonnet-4-20250514",
+        "deepseek/deepseek-chat",
+        "ollama/llama3",
+      ],
+      worker_chain: [
+        "deepseek/deepseek-chat",
+        "ollama/llama3",
+      ],
+      challenger_model: "openrouter/deepseek/deepseek-chat",
+      challenger_chain: [
+        "deepseek/deepseek-chat",
+        "ollama/llama3",
+      ],
+      arbiter_model: "anthropic/claude-sonnet-4-20250514",
+      arbiter_chain: [
+        "claude-sonnet-4-20250514",
+        "deepseek/deepseek-chat",
+        "ollama/llama3",
+      ],
     },
   },
   paths: { ledger: ".orchestrator" },
@@ -235,6 +269,12 @@ async function loadAdapter(name: string): Promise<{ config: AdapterConfig; dir: 
           DEFAULTS.hermes.provider.orchestrator_model,
         worker: p.worker || DEFAULTS.hermes.provider.worker,
         worker_model: p.worker_model || DEFAULTS.hermes.provider.worker_model,
+        orchestrator_chain: p.orchestrator_chain ?? DEFAULTS.hermes.provider.orchestrator_chain,
+        worker_chain: p.worker_chain ?? DEFAULTS.hermes.provider.worker_chain,
+        challenger_model: p.challenger_model ?? DEFAULTS.hermes.provider.challenger_model,
+        challenger_chain: p.challenger_chain ?? DEFAULTS.hermes.provider.challenger_chain,
+        arbiter_model: p.arbiter_model ?? DEFAULTS.hermes.provider.arbiter_model,
+        arbiter_chain: p.arbiter_chain ?? DEFAULTS.hermes.provider.arbiter_chain,
       },
     },
     paths: {
@@ -270,6 +310,7 @@ function makeSubstVars(
     workerModel: string;
   },
 ): Record<string, string> {
+  const p = config.hermes.provider;
   return {
     __HERMES_PROJECT_NAME__: config.project.name,
     __HERMES_OBJECTIVE__: config.project.objective,
@@ -292,6 +333,19 @@ function makeSubstVars(
     __HERMES_REPO_DIR__: repoDir,
     __HERMES_ALLOWED_PATHS_YAML__: toYamlList(config.boundaries.allowed),
     __HERMES_FORBIDDEN_PATHS_YAML__: toYamlList(config.boundaries.forbidden),
+    // LiteLLM provider chain vars
+    __HERMES_ORCH_CHAIN_0__: (p.orchestrator_chain ?? [])[0] ?? opts.orchModel,
+    __HERMES_ORCH_CHAIN_1__: (p.orchestrator_chain ?? [])[1] ?? (p.orchestrator_chain ?? [])[0] ?? opts.orchModel,
+    __HERMES_ORCH_CHAIN_2__: (p.orchestrator_chain ?? [])[2] ?? (p.orchestrator_chain ?? [])[0] ?? opts.orchModel,
+    __HERMES_WORKER_CHAIN_0__: (p.worker_chain ?? [])[0] ?? opts.workerModel,
+    __HERMES_WORKER_CHAIN_1__: (p.worker_chain ?? [])[1] ?? (p.worker_chain ?? [])[0] ?? opts.workerModel,
+    __HERMES_CHALLENGER_MODEL__: p.challenger_model ?? (p.worker_chain ?? [])[0] ?? opts.workerModel,
+    __HERMES_CHALLENGER_CHAIN_0__: (p.challenger_chain ?? [])[0] ?? p.challenger_model ?? (p.worker_chain ?? [])[0] ?? opts.workerModel,
+    __HERMES_CHALLENGER_CHAIN_1__: (p.challenger_chain ?? [])[1] ?? (p.challenger_chain ?? [])[0] ?? (p.worker_chain ?? [])[0] ?? opts.workerModel,
+    __HERMES_ARBITER_MODEL__: p.arbiter_model ?? opts.orchModel,
+    __HERMES_ARBITER_CHAIN_0__: (p.arbiter_chain ?? [])[0] ?? p.arbiter_model ?? opts.orchModel,
+    __HERMES_ARBITER_CHAIN_1__: (p.arbiter_chain ?? [])[1] ?? (p.arbiter_chain ?? [])[0] ?? opts.orchModel,
+    __HERMES_ARBITER_CHAIN_2__: (p.arbiter_chain ?? [])[2] ?? (p.arbiter_chain ?? [])[0] ?? opts.orchModel,
   };
 }
 
@@ -420,6 +474,84 @@ async function installProfile(
   say(`profile installed: ${name}`);
 }
 
+// ─── Registry update ──────────────────────────────────────────────────────────
+
+interface RegistryEntry {
+  name: string;
+  adapter: string;
+  repo: string;
+  ledger: string;
+  board: string;
+  tick: string;
+  profiles: string[];
+  status: string;
+  goal_status: string;
+  registered_at: string;
+  updated_at: string;
+}
+
+interface RegistryData {
+  schema_version: number;
+  projects: RegistryEntry[];
+}
+
+async function updateRegistry(
+  config: AdapterConfig,
+  repoDir: string,
+  adapterName: string,
+  profileNames: string[],
+  isDryRun: boolean,
+) {
+  const now = new Date().toISOString();
+
+  if (isDryRun) {
+    dry(`update registry at ${REGISTRY_PATH}`);
+    dry(`  register: ${config.project.name} (${repoDir})`);
+    return;
+  }
+
+  mkdirSync(HEPHAESTUS_DIR, { recursive: true });
+
+  // Read existing registry
+  let registry: RegistryData = { schema_version: 1, projects: [] };
+  if (existsSync(REGISTRY_PATH)) {
+    try {
+      const raw = yamlLoad(await Bun.file(REGISTRY_PATH).text()) as RegistryData;
+      if (raw && Array.isArray(raw.projects)) registry = raw;
+    } catch {
+      warn(`Failed to parse existing registry at ${REGISTRY_PATH} — will overwrite`);
+    }
+  }
+
+  // Find existing entry by repo path (idempotent)
+  const existingIdx = registry.projects.findIndex((p) => p.repo === repoDir);
+
+  const entry: RegistryEntry = {
+    name: config.project.name,
+    adapter: adapterName,
+    repo: repoDir,
+    ledger: config.paths.ledger,
+    board: config.project.board_name,
+    tick: config.hermes.tick_name,
+    profiles: profileNames,
+    status: "active",
+    goal_status: "none",
+    registered_at: existingIdx >= 0 ? registry.projects[existingIdx].registered_at : now,
+    updated_at: now,
+  };
+
+  if (existingIdx >= 0) {
+    registry.projects[existingIdx] = entry;
+    say(`registry updated: ${config.project.name} (existing entry)`);
+  } else {
+    registry.projects.push(entry);
+    say(`registry written: ${config.project.name} -> ${REGISTRY_PATH}`);
+  }
+
+  const yaml = yamlDump(registry, { indent: 2, lineWidth: -1, noRefs: true });
+  Bun.write(REGISTRY_PATH, yaml);
+}
+
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -478,9 +610,21 @@ async function main() {
       dr(`  sub templates/config.worker.yaml > profiles/${pWkr}-${i}/config.yaml`);
       dr(`  sub templates/SOUL.worker.md > profiles/${pWkr}-${i}/SOUL.md`);
     }
+    dr(`install profile '${pWkr}-challenger':`);
+    dr(`  hermes profile create ${pWkr}-challenger (if missing) — read-only, blind evaluation`);
+    dr(`  sub templates/config.worker.yaml > profiles/${pWkr}-challenger/config.yaml`);
+    dr(`  sub templates/SOUL.worker.md > profiles/${pWkr}-challenger/SOUL.md`);
+    dr(`install profile '${pWkr}-arbiter':`);
+    dr(`  hermes profile create ${pWkr}-arbiter (if missing) — binding decision, premium model`);
+    dr(`  sub templates/config.worker.yaml > profiles/${pWkr}-arbiter/config.yaml`);
+    dr(`  sub templates/SOUL.worker.md > profiles/${pWkr}-arbiter/SOUL.md`);
 
     dr(`mkdir -p ${HERMES_SCRIPTS}`);
     dr(`sub templates/scripts/tick-gate.sh > ${HERMES_SCRIPTS}/${config.hermes.tick_name}-gate.sh`);
+
+    // LiteLLM proxy config (dry-run)
+    dr(`sub templates/litellm-config.yaml > ${HERMES_SCRIPTS}/litellm-config.yaml`);
+    dr("LiteLLM proxy config generated — each profile has fallback chain ending in local model");
 
     const ledgerDir = join(repoDir, config.paths.ledger);
     dr(`mkdir -p ${ledgerDir}/{hypotheses,runs,reports}`);
@@ -495,6 +639,13 @@ async function main() {
     } else {
       dr(`sub templates/AGENTS.md > ${join(repoDir, "AGENTS.md")} (only if missing)`);
     }
+
+    // Registry update (dry-run)
+    const dryProfiles = [
+      pOrch,
+      ...Array.from({ length: pCnt }, (_, i) => `${pWkr}-${i + 1}`),
+    ];
+    await updateRegistry(config, repoDir, args.adapter || "default", dryProfiles, true);
   }
 
   // ── Preflight ──
@@ -546,6 +697,30 @@ async function main() {
       );
     }
 
+    // Challenger profile (read-only, different model from orchestrator/worker)
+    const challengerName = `${config.hermes.profile_worker_prefix}-challenger`;
+    await installProfile(
+      hermesBin, hermesRoot,
+      challengerName,
+      "config.worker.yaml",
+      "SOUL.worker.md",
+      vars,
+      false,
+    );
+    say(`challenger profile: ${challengerName} (read-only, blind evaluation)`);
+
+    // Arbiter profile (binding decision, premium model)
+    const arbiterName = `${config.hermes.profile_worker_prefix}-arbiter`;
+    await installProfile(
+      hermesBin, hermesRoot,
+      arbiterName,
+      "config.worker.yaml",
+      "SOUL.worker.md",
+      vars,
+      false,
+    );
+    say(`arbiter profile: ${arbiterName} (binding decision, premium model)`);
+
     // ── Gate script ──
     mkdirSync(HERMES_SCRIPTS, { recursive: true });
     const gateContent = await subFile(
@@ -555,11 +730,23 @@ async function main() {
     Bun.write(join(HERMES_SCRIPTS, `${config.hermes.tick_name}-gate.sh`), gateContent);
     say(`gate script installed: ${HERMES_SCRIPTS}/${config.hermes.tick_name}-gate.sh`);
 
+    // ── LiteLLM proxy config ──
+    const litellmContent = await subFile(join(TEMPLATES_DIR, "litellm-config.yaml"), vars);
+    Bun.write(join(HERMES_SCRIPTS, "litellm-config.yaml"), litellmContent);
+    say(`LiteLLM proxy config: ${HERMES_SCRIPTS}/litellm-config.yaml`);
+    say("  Each profile has a fallback chain ending in a local model (never-dies guarantee)");
+    say("  Start proxy: litellm --config ~/.hermes/scripts/litellm-config.yaml");
+
     // ── Ledger ──
     const ledgerDir = join(repoDir, config.paths.ledger);
     mkdirSync(join(ledgerDir, "hypotheses"), { recursive: true });
     mkdirSync(join(ledgerDir, "runs"), { recursive: true });
     mkdirSync(join(ledgerDir, "reports"), { recursive: true });
+    mkdirSync(join(ledgerDir, "ideas"), { recursive: true });
+    if (!existsSync(join(ledgerDir, "events.jsonl"))) {
+      Bun.write(join(ledgerDir, "events.jsonl"), "");
+      say(`events log: ${ledgerDir}/events.jsonl`);
+    }
 
     if (!existsSync(join(ledgerDir, "control.yaml"))) {
       const ctrl = await subFile(join(TEMPLATES_DIR, "control.yaml"), vars);
@@ -568,6 +755,11 @@ async function main() {
     if (!existsSync(join(ledgerDir, "state.json"))) {
       const state = await subFile(join(TEMPLATES_DIR, "state.json"), vars);
       Bun.write(join(ledgerDir, "state.json"), state);
+    }
+    if (!existsSync(join(ledgerDir, "goal.yaml"))) {
+      const goalContent = await subFile(join(TEMPLATES_DIR, "goal.yaml"), vars);
+      Bun.write(join(ledgerDir, "goal.yaml"), goalContent);
+      say(`goal config: ${ledgerDir}/goal.yaml`);
     }
 
     // Seed hypotheses from adapter
@@ -675,6 +867,13 @@ async function main() {
         die(`cron create failed: ${cc.stderr.toString().trim()}`);
       }
     }
+
+    // ── Registry update ──
+    const registryProfiles = [
+      config.hermes.profile_orchestrator,
+      ...Array.from({ length: config.hermes.worker_count }, (_, i) => `${config.hermes.profile_worker_prefix}-${i + 1}`),
+    ];
+    await updateRegistry(config, repoDir, args.adapter || "default", registryProfiles, false);
 
     // Verification
     say("--- verification ---");

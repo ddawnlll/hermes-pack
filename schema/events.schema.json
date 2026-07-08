@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ddawnlll/hephaestus/schema/events.schema.json",
+  "title": "Hermes Events Schema",
+  "description": "Versioned schema for events.jsonl — append-only event log for the Live Ticker and audit trail.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "description": "Schema version number.",
+      "minimum": 1,
+      "default": 1
+    },
+    "event_id": {
+      "type": "string",
+      "description": "Unique event identifier (e.g. uuid)."
+    },
+    "timestamp": {
+      "type": "string",
+      "description": "ISO 8601 event timestamp.",
+      "format": "date-time"
+    },
+    "type": {
+      "type": "string",
+      "description": "Event type for filtering in Live Ticker.",
+      "enum": [
+        "tick_start", "tick_end", "tick_skip",
+        "worker_dispatch", "worker_complete", "worker_fail", "worker_abort", "worker_kill",
+        "praxis_verify_start", "praxis_verdict",
+        "gate_pass", "gate_fail", "gate_hold",
+        "goal_status_change",
+        "idea_generated", "idea_promoted",
+        "merge", "pr_created",
+        "budget_warning", "budget_exhausted",
+        "human_gate_pending", "human_approve", "human_reject",
+        "config_change",
+        "error", "warning"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "description": "Component that produced this event: orchestrator, tick-gate, worker, praxis, human, ideas-engine.",
+      "default": ""
+    },
+    "project": {
+      "type": "string",
+      "description": "Project name this event belongs to.",
+      "default": ""
+    },
+    "payload": {
+      "type": "object",
+      "description": "Event-specific structured data.",
+      "default": {}
+    },
+    "severity": {
+      "type": "string",
+      "description": "Event severity level.",
+      "enum": ["info", "warning", "error", "critical"],
+      "default": "info"
+    }
+  },
+  "required": ["schema_version", "event_id", "timestamp", "type"],
+  "additionalProperties": false
+}

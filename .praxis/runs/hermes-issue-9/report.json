@@ -1,0 +1,89 @@
+{
+  "reportVersion": "praxis-report/v0.1",
+  "attemptId": "hermes-issue-9",
+  "planId": "HERMES-9",
+  "planTitle": "Ideas Engine",
+  "verdict": "PASS",
+  "ok": true,
+  "createdAt": "2026-07-08T10:25:11.554Z",
+  "startedAt": "2026-07-08T10:25:11.243Z",
+  "finishedAt": "2026-07-08T10:25:11.553Z",
+  "gates": [
+    {
+      "gateName": "SchemaGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "SCHEMA_PASS"
+      ]
+    },
+    {
+      "gateName": "LockGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "LOCK_PASS"
+      ]
+    },
+    {
+      "gateName": "EvidenceGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "EVIDENCE_PASS"
+      ]
+    },
+    {
+      "gateName": "WiringGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "WIRING_PASS"
+      ]
+    },
+    {
+      "gateName": "ExecGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "COMMAND_SUCCEEDED",
+        "EXEC_PASS"
+      ]
+    },
+    {
+      "gateName": "FinalGate",
+      "verdict": "PASS",
+      "reasonCodes": [
+        "FILE_FOUND",
+        "ALL_CRITERIA_MET"
+      ]
+    }
+  ],
+  "totalGates": 6,
+  "passedGates": 6,
+  "heldGates": 0,
+  "failedGates": 0,
+  "diagnostics": [
+    {
+      "code": "INVALID_GATE_SEQUENCE",
+      "severity": "warning",
+      "message": "Gates reasonCodes should include key \"LockGate\".",
+      "gate": "LockGate"
+    },
+    {
+      "code": "INVALID_GATE_SEQUENCE",
+      "severity": "warning",
+      "message": "Gates reasonCodes should include key \"WiringGate\".",
+      "gate": "WiringGate"
+    },
+    {
+      "code": "MISSING_REQUIRED_HASH_FIELD",
+      "severity": "warning",
+      "message": "Locking hashes should include \"integrationContractHash\".",
+      "path": "/locking/hashes"
+    }
+  ],
+  "summary": "All gates passed. The task is complete per PRAXIS Law 1.",
+  "criterionSummary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "advisory": 0,
+    "notEvaluated": 0
+  }
+}

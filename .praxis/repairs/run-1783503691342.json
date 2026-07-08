@@ -1,0 +1,91 @@
+{
+  "packetVersion": "praxis-repair/v0.1",
+  "attemptId": "run-1783503691342",
+  "planId": "HERMES-ISSUE-001",
+  "createdAt": "2026-07-08T09:41:31.913Z",
+  "triggerVerdict": "HOLD",
+  "failedGates": [
+    {
+      "gateName": "EvidenceGate",
+      "verdict": "HOLD",
+      "reasonCodes": [
+        "EVIDENCE_LEDGER_MISSING"
+      ],
+      "repairHint": "No evidence ledger provided. Execute the plan or provide evidence records."
+    },
+    {
+      "gateName": "FinalGate",
+      "verdict": "HOLD",
+      "reasonCodes": [
+        "FILE_FOUND",
+        "CRITERION_PASS",
+        "CRITERIA_PARTIAL"
+      ],
+      "repairHint": "All criteria passed but one or more prior gates returned HOLD. Resolve prior gate issues first."
+    }
+  ],
+  "failedCriteria": [],
+  "advisoryCriteria": [],
+  "strategies": [
+    {
+      "kind": "initial",
+      "description": "Standard repair — fix the specific failures identified below.",
+      "actions": [
+        "Review each failed criterion and its evidence.",
+        "Make targeted code changes to address the failures.",
+        "Re-run verification after changes."
+      ]
+    },
+    {
+      "kind": "tool_restrict",
+      "description": "Evidence collection may be incomplete.",
+      "actions": [
+        "Ensure diff evidence is generated for code changes.",
+        "Run tests to produce test_output evidence.",
+        "Check that file changes stay within allowed namespaces.",
+        "Avoid modifying forbidden files."
+      ]
+    },
+    {
+      "kind": "hint_inject",
+      "description": "General guidance for re-verification.",
+      "actions": [
+        "Run \"praxis verify\" after making changes to confirm fixes.",
+        "Check that all acceptance criteria are addressed.",
+        "Ensure human approval flag is set where needed."
+      ]
+    }
+  ],
+  "affectedFiles": [],
+  "summary": "Repair packet generated for attempt run-1783503691342. 2 gate(s) non-passing, 0 criterion/criteria failed.",
+  "diagnostics": [
+    {
+      "code": "INVALID_GATE_SEQUENCE",
+      "severity": "warning",
+      "message": "Gates reasonCodes should include key \"LockGate\".",
+      "gate": "LockGate"
+    },
+    {
+      "code": "INVALID_GATE_SEQUENCE",
+      "severity": "warning",
+      "message": "Gates reasonCodes should include key \"WiringGate\".",
+      "gate": "WiringGate"
+    },
+    {
+      "code": "MISSING_REQUIRED_HASH_FIELD",
+      "severity": "warning",
+      "message": "Locking hashes should include \"integrationContractHash\".",
+      "path": "/locking/hashes"
+    },
+    {
+      "code": "LOCK_CREATED",
+      "severity": "info",
+      "message": "Lock file created at .praxis/locks/current.lock.yaml."
+    },
+    {
+      "code": "PRIOR_GATE_HOLD",
+      "severity": "warning",
+      "message": "One or more prior gates returned HOLD. FinalGate will evaluate criteria but overall pipeline is HOLD."
+    }
+  ]
+}

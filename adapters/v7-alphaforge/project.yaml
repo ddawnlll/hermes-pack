@@ -19,6 +19,24 @@ hermes:
     orchestrator_model: "__NEEDS_LOCAL_VERIFICATION__"
     worker: "openrouter"
     worker_model: "__NEEDS_LOCAL_VERIFICATION__"
+    # Provider fallback chains (LiteLLM proxy) — "never-dies" guarantee
+    # Last model in each chain MUST be a local model (Ollama/LM Studio)
+    orchestrator_chain:
+      - "claude-sonnet-4-20250514"          # primary
+      - "deepseek/deepseek-chat"            # fallback 1
+      - "ollama/llama3"                     # local fallback (never-dies)
+    worker_chain:
+      - "deepseek/deepseek-chat"            # primary (cheap)
+      - "ollama/llama3"                     # local fallback
+    challenger_model: "openrouter/deepseek/deepseek-chat"
+    challenger_chain:
+      - "deepseek/deepseek-chat"            # different from orchestrator
+      - "ollama/llama3"                     # local fallback
+    arbiter_model: "anthropic/claude-sonnet-4-20250514"
+    arbiter_chain:
+      - "claude-sonnet-4-20250514"          # premium
+      - "deepseek/deepseek-chat"            # mid fallback
+      - "ollama/llama3"                     # local fallback
 
 paths:
   ledger: ".alphaforge/orchestrator"

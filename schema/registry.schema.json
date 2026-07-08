@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ddawnlll/hephaestus/schema/registry.schema.json",
+  "title": "Hephaestus Registry Schema",
+  "description": "Versioned schema for ~/.hephaestus/registry.yaml — tracks all projects managed by Hephaestus on this machine.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "description": "Schema version number. Bump when making backward-incompatible changes.",
+      "minimum": 1,
+      "default": 1
+    },
+    "projects": {
+      "type": "array",
+      "description": "List of registered projects.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Project display name (e.g. AlphaForge)."
+          },
+          "adapter": {
+            "type": "string",
+            "description": "Adapter name used during bootstrap (e.g. v7-alphaforge).",
+            "default": ""
+          },
+          "repo": {
+            "type": "string",
+            "description": "Absolute path to the project repository."
+          },
+          "ledger": {
+            "type": "string",
+            "description": "Relative path from repo root to the ledger directory (e.g. .alphaforge/orchestrator)."
+          },
+          "board": {
+            "type": "string",
+            "description": "Kanban board name for this project."
+          },
+          "tick": {
+            "type": "string",
+            "description": "Cron tick name for this project.",
+            "default": ""
+          },
+          "profiles": {
+            "type": "array",
+            "description": "List of Hermes profile names created for this project.",
+            "items": { "type": "string" },
+            "default": []
+          },
+          "status": {
+            "type": "string",
+            "description": "Project operational status.",
+            "enum": ["active", "paused", "archived", "incubating"],
+            "default": "active"
+          },
+          "goal_status": {
+            "type": "string",
+            "description": "Current goal status for this project.",
+            "enum": ["in_progress", "achieved", "blocked", "exhausted", "none"],
+            "default": "none"
+          },
+          "registered_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of when the project was registered.",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of last update.",
+            "format": "date-time"
+          }
+        },
+        "required": ["name", "repo", "ledger", "board"],
+        "additionalProperties": false
+      },
+      "default": []
+    }
+  },
+  "required": ["schema_version", "projects"],
+  "additionalProperties": false
+}

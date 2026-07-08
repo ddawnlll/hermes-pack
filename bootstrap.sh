@@ -425,6 +425,97 @@ else
   fi
 fi
 
+# ----------------------------- registry update --------------------------------
+HEPHAESTUS_DIR="${HEPHAESTUS_DIR:-$HOME/.hephaestus}"
+REGISTRY_FILE="$HEPHAESTUS_DIR/registry.yaml"
+REGISTRY_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || python -c "from datetime import datetime; print(datetime.utcnow().isoformat()+'Z')" 2>/dev/null || echo "$(date +%Y-%m-%dT%H:%M:%SZ)")
+
+if $DRY_RUN; then
+  dry "update registry at $REGISTRY_FILE"
+  dry "  register: $PROJECT_NAME ($REPO_DIR)"
+else
+  mkdir -p "$HEPHAESTUS_DIR"
+
+  # Build YAML entry
+  REGISTRY_ENTRY="
+  - name: \"$PROJECT_NAME\"
+    adapter: \"${ADAPTER:-default}\"
+    repo: \"$REPO_DIR\"
+    ledger: \"$LEDGER_DIR\"
+    board: \"$BOARD_NAME\"
+    tick: \"$TICK_NAME\"
+    profiles: [$PROFILE_ORCH$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", ${PROFILE_WORKER_PREFIX}-${i}"; done)]
+    status: \"active\"
+    goal_status: \"none\"
+    registered_at: \"$REGISTRY_TIMESTAMP\"
+    updated_at: \"$REGISTRY_TIMESTAMP\""
+
+  if [ -f "$REGISTRY_FILE" ] && grep -q "repo: \"$REPO_DIR\"" "$REGISTRY_FILE" 2>/dev/null; then
+    # Update existing entry — simple approach: remove old entry, append new
+    python -c "
+import re, yaml
+with open('$REGISTRY_FILE', encoding='utf-8') as f:
+    content = f.read()
+registry = yaml.safe_load(content) or {'schema_version': 1, 'projects': []}
+if not isinstance(registry, dict): registry = {'schema_version': 1, 'projects': []}
+if 'projects' not in registry: registry['projects'] = []
+# Remove existing entry with this repo
+registry['projects'] = [p for p in registry['projects'] if p.get('repo') != '$REPO_DIR']
+# Add new entry
+import json
+entry = json.loads('''$(python -c "
+import json
+print(json.dumps({
+    'name': '$PROJECT_NAME',
+    'adapter': '${ADAPTER:-default}',
+    'repo': '$REPO_DIR',
+    'ledger': '$LEDGER_DIR',
+    'board': '$BOARD_NAME',
+    'tick': '$TICK_NAME',
+    'profiles': ['$PROFILE_ORCH'$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", '${PROFILE_WORKER_PREFIX}-${i}'"; done)],
+    'status': 'active',
+    'goal_status': 'none',
+    'registered_at': '$REGISTRY_TIMESTAMP',
+    'updated_at': '$REGISTRY_TIMESTAMP',
+}))
+''')
+)
+registry['projects'].append(entry)
+with open('$REGISTRY_FILE', 'w', encoding='utf-8') as f:
+    yaml.dump(registry, f, indent=2, default_flow_style=False, allow_unicode=True)
+print('Registry updated for $PROJECT_NAME')
+" 2>&1
+    say "registry updated: $PROJECT_NAME (existing entry)"
+  else
+    # Create new registry
+    mkdir -p "$HEPHAESTUS_DIR"
+    # Use python for YAML write
+    python -c "
+import yaml
+registry = {
+    'schema_version': 1,
+    'projects': [{
+        'name': '$PROJECT_NAME',
+        'adapter': '${ADAPTER:-default}',
+        'repo': '$REPO_DIR',
+        'ledger': '$LEDGER_DIR',
+        'board': '$BOARD_NAME',
+        'tick': '$TICK_NAME',
+        'profiles': ['$PROFILE_ORCH'$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", '${PROFILE_WORKER_PREFIX}-${i}'"; done)],
+        'status': 'active',
+        'goal_status': 'none',
+        'registered_at': '$REGISTRY_TIMESTAMP',
+        'updated_at': '$REGISTRY_TIMESTAMP',
+    }]
+}
+with open('$REGISTRY_FILE', 'w', encoding='utf-8') as f:
+    yaml.dump(registry, f, indent=2, default_flow_style=False, allow_unicode=True)
+print('Registry created at $REGISTRY_FILE')
+" 2>&1
+    say "registry written: $PROJECT_NAME -> $REGISTRY_FILE"
+  fi
+fi
+
 # ----------------------------- summary --------------------------------------
 echo ""
 say "========== $PROJECT_NAME — Hermes Orchestrator Pack =========="

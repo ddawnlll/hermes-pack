@@ -1,0 +1,57 @@
+{
+  "packetVersion": "praxis-repair/v0.1",
+  "attemptId": "run-1783502892166",
+  "planId": "unknown",
+  "createdAt": "2026-07-08T09:28:12.388Z",
+  "triggerVerdict": "FAIL",
+  "failedGates": [
+    {
+      "gateName": "SchemaGate",
+      "verdict": "FAIL",
+      "reasonCodes": [
+        "PLAN_SCHEMA_LOAD_ERROR"
+      ],
+      "repairHint": "Fix PlanSpec YAML syntax, schema violations, or semantic errors listed in diagnostics."
+    }
+  ],
+  "failedCriteria": [],
+  "advisoryCriteria": [],
+  "strategies": [
+    {
+      "kind": "initial",
+      "description": "Standard repair — fix the specific failures identified below.",
+      "actions": [
+        "Review each failed criterion and its evidence.",
+        "Make targeted code changes to address the failures.",
+        "Re-run verification after changes."
+      ]
+    },
+    {
+      "kind": "context_expand",
+      "description": "Schema validation failed. Review the plan specification.",
+      "actions": [
+        "Check plan YAML syntax and schema compliance.",
+        "Ensure all required fields are present.",
+        "Validate against the PlanSpec schema."
+      ]
+    },
+    {
+      "kind": "hint_inject",
+      "description": "General guidance for re-verification.",
+      "actions": [
+        "Run \"praxis verify\" after making changes to confirm fixes.",
+        "Check that all acceptance criteria are addressed.",
+        "Ensure human approval flag is set where needed."
+      ]
+    }
+  ],
+  "affectedFiles": [],
+  "summary": "Repair packet generated for attempt run-1783502892166. 1 gate(s) non-passing, 0 criterion/criteria failed.",
+  "diagnostics": [
+    {
+      "code": "PLAN_SCHEMA_LOAD_ERROR",
+      "severity": "error",
+      "message": "Failed to read schema file at C:\\Users\\dresden\\Documents\\hermes-pack\\schemas\\planspec.v0.1.schema.yaml: ENOENT: no such file or directory, open 'C:\\Users\\dresden\\Documents\\hermes-pack\\schemas\\planspec.v0.1.schema.yaml'"
+    }
+  ]
+}

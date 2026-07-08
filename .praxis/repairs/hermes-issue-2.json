@@ -1,0 +1,106 @@
+{
+  "packetVersion": "praxis-repair/v0.1",
+  "attemptId": "hermes-issue-2",
+  "planId": "HERMES-2",
+  "createdAt": "2026-07-08T10:23:09.039Z",
+  "triggerVerdict": "FAIL",
+  "failedGates": [
+    {
+      "gateName": "EvidenceGate",
+      "verdict": "FAIL",
+      "reasonCodes": [
+        "UNKNOWN_TASK_ID"
+      ],
+      "repairHint": "Evidence validation failed. See diagnostics for details."
+    }
+  ],
+  "failedCriteria": [],
+  "advisoryCriteria": [],
+  "strategies": [
+    {
+      "kind": "initial",
+      "description": "Standard repair — fix the specific failures identified below.",
+      "actions": [
+        "Review each failed criterion and its evidence.",
+        "Make targeted code changes to address the failures.",
+        "Re-run verification after changes."
+      ]
+    },
+    {
+      "kind": "tool_restrict",
+      "description": "Evidence collection may be incomplete.",
+      "actions": [
+        "Ensure diff evidence is generated for code changes.",
+        "Run tests to produce test_output evidence.",
+        "Check that file changes stay within allowed namespaces.",
+        "Avoid modifying forbidden files."
+      ]
+    },
+    {
+      "kind": "hint_inject",
+      "description": "General guidance for re-verification.",
+      "actions": [
+        "Run \"praxis verify\" after making changes to confirm fixes.",
+        "Check that all acceptance criteria are addressed.",
+        "Ensure human approval flag is set where needed."
+      ]
+    }
+  ],
+  "affectedFiles": [],
+  "summary": "Repair packet generated for attempt hermes-issue-2. 1 gate(s) non-passing, 0 criterion/criteria failed.",
+  "diagnostics": [
+    {
+      "code": "INVALID_GATE_SEQUENCE",
+      "severity": "warning",
+      "message": "Gates reasonCodes should include key \"LockGate\".",
+      "gate": "LockGate"
+    },
+    {
+      "code": "INVALID_GATE_SEQUENCE",
+      "severity": "warning",
+      "message": "Gates reasonCodes should include key \"WiringGate\".",
+      "gate": "WiringGate"
+    },
+    {
+      "code": "MISSING_REQUIRED_HASH_FIELD",
+      "severity": "warning",
+      "message": "Locking hashes should include \"integrationContractHash\".",
+      "path": "/locking/hashes"
+    },
+    {
+      "code": "LOCK_CREATED",
+      "severity": "info",
+      "message": "Lock file created at .praxis/locks/current.lock.yaml."
+    },
+    {
+      "code": "UNKNOWN_TASK_ID",
+      "severity": "error",
+      "message": "Evidence record EV-issue-2-CF-001: references unknown taskId \"task-issue-2\"."
+    },
+    {
+      "code": "UNKNOWN_TASK_ID",
+      "severity": "error",
+      "message": "Evidence record EV-issue-2-CF-002: references unknown taskId \"task-issue-2\"."
+    },
+    {
+      "code": "UNKNOWN_TASK_ID",
+      "severity": "error",
+      "message": "Evidence record EV-issue-2-AC-1-001: references unknown taskId \"task-issue-2\"."
+    },
+    {
+      "code": "UNKNOWN_TASK_ID",
+      "severity": "error",
+      "message": "Evidence record EV-issue-2-AC-2-002: references unknown taskId \"task-issue-2\"."
+    },
+    {
+      "code": "UNKNOWN_TASK_ID",
+      "severity": "error",
+      "message": "Evidence record EV-issue-2-DIFF-001: references unknown taskId \"task-issue-2\"."
+    },
+    {
+      "code": "UNKNOWN_TASK_ID",
+      "severity": "error",
+      "message": "Evidence record EV-issue-2-BUILD-001: references unknown taskId \"task-issue-2\"."
+    }
+  ]
+}

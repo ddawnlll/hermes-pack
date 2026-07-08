@@ -1,0 +1,18 @@
+lockVersion: praxis-plan-lock/v0.1
+planSpecVersion: 0.1.0
+kind: ImplementationPlan
+profile: praxis-v0.1
+planId: HERMES-7
+title: events.jsonl
+createdAt: 2026-07-08T12:00:00Z
+updatedAt: 2026-07-08T10:24:30.634Z
+hashes:
+  planHash: 17c9496a87a49bc1e24d76669dcd9ca0334658c3975922043cf74f13f8040cc8
+  acceptanceCriteriaHash: 39374f1611f27281ce01ef3c84a829a9f8d0efe7c83f1c60113940626c170765
+  artifactPolicyHash: d6717a5b668ef69938d623e86629297d9d185c42fb701e7f01bae67caa1c6535
+  integrationContractHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  commandPolicyHash: 7685c14763c960a308545b13526aed20eeb80e9ea8ab340992d280c0a0241828
+  allowedFilesHash: c1da58b069fb9957502566825f0a60ef285b4d01f83fe2dc485a8e96f30d9421
+  forbiddenFilesHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+source:
+  schemaPath: schemas/planspec.v0.1.schema.yaml

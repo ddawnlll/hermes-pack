@@ -1,0 +1,18 @@
+lockVersion: praxis-plan-lock/v0.1
+planSpecVersion: 0.1.0
+kind: ImplementationPlan
+profile: praxis-v0.1
+planId: HERMES-11
+title: Ideas Engine anti-collapse
+createdAt: 2026-07-08T12:00:00Z
+updatedAt: 2026-07-08T10:24:33.338Z
+hashes:
+  planHash: 0f56587f2e4e9ade453147a987c52b52113d24697d3bf52bd5fce06140e33e55
+  acceptanceCriteriaHash: 4cc7ab339790bd92f6e8bbee849ad8b65b86cd97da476dc094a028bb3e2cd2cb
+  artifactPolicyHash: 686d4322ee0bea65ee7de6f5e85b7a3795e5d6fd32402a25364a816d21cb52cc
+  integrationContractHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  commandPolicyHash: 7685c14763c960a308545b13526aed20eeb80e9ea8ab340992d280c0a0241828
+  allowedFilesHash: d37b550c2f08528196684334112c68f6c55be044e4318e81e7c2b8ecb99918b2
+  forbiddenFilesHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+source:
+  schemaPath: schemas/planspec.v0.1.schema.yaml

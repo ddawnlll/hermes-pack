@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ddawnlll/hephaestus/schema/state.schema.json",
+  "title": "Hermes State Schema",
+  "description": "Versioned schema for Hermes orchestrator state.json. All tools MUST validate state against this schema before writing.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "description": "Schema version number. Bump when making backward-incompatible changes.",
+      "minimum": 1,
+      "default": 1
+    },
+    "tick": {
+      "type": "integer",
+      "description": "Current tick number (monotonically increasing).",
+      "minimum": 0,
+      "default": 0
+    },
+    "worker_status": {
+      "type": "object",
+      "description": "Map of worker names to their current status.",
+      "additionalProperties": {
+        "type": "string",
+        "enum": ["idle", "running", "blocked", "completed", "failed", "killed"]
+      },
+      "default": {}
+    },
+    "spend_today_usd": {
+      "type": "number",
+      "description": "Total LLM spend today in USD.",
+      "minimum": 0,
+      "default": 0
+    },
+    "budget_usd": {
+      "type": "number",
+      "description": "Daily maximum LLM spend in USD.",
+      "minimum": 0,
+      "default": 25
+    },
+    "last_tick_at": {
+      "type": ["string", "null"],
+      "description": "ISO 8601 timestamp of the last tick, or null.",
+      "format": "date-time",
+      "default": null
+    },
+    "board": {
+      "type": "string",
+      "description": "Kanban board name for this project.",
+      "default": ""
+    },
+    "gates": {
+      "type": "object",
+      "description": "Gate pass counters per gate level.",
+      "properties": {
+        "T0": { "type": "integer", "minimum": 0, "default": 0 },
+        "T1": { "type": "integer", "minimum": 0, "default": 0 },
+        "T2": { "type": "integer", "minimum": 0, "default": 0 },
+        "T3": { "type": "integer", "minimum": 0, "default": 0 },
+        "T4": { "type": "integer", "minimum": 0, "default": 0 }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "goal_status": {
+      "type": "string",
+      "description": "Current goal status from goal.yaml evaluation.",
+      "enum": ["in_progress", "achieved", "blocked", "exhausted", "none"],
+      "default": "none"
+    }
+  },
+  "required": ["schema_version", "tick"],
+  "additionalProperties": false
+}

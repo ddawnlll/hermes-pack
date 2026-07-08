@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ddawnlll/hephaestus/schema/ideas.schema.json",
+  "title": "Hermes Ideas Schema",
+  "description": "Versioned schema for ideas/*.yaml — idea lifecycle tracking for the Ideas Engine.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "description": "Schema version number.",
+      "minimum": 1,
+      "default": 1
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique idea identifier (e.g. uuid or incrementing ID)."
+    },
+    "title": {
+      "type": "string",
+      "description": "Short human-readable idea title."
+    },
+    "description": {
+      "type": "string",
+      "description": "Full idea description."
+    },
+    "source": {
+      "type": "string",
+      "description": "Origin of this idea: failure_mining, codebase_scan, external_research, cross_project, human, mutation.",
+      "default": "human"
+    },
+    "source_project": {
+      "type": "string",
+      "description": "Source project name (for cross-project transfers).",
+      "default": ""
+    },
+    "status": {
+      "type": "string",
+      "description": "Current lifecycle stage.",
+      "enum": ["spark", "triaged", "hypothesis", "task", "verdict_pass", "verdict_fail", "cancelled"],
+      "default": "spark"
+    },
+    "triage_score": {
+      "type": "number",
+      "description": "Triage score (expected_value × provability / cost). Higher = prioritize first.",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 0
+    },
+    "novelty_score": {
+      "type": "number",
+      "description": "Novelty score from novelty arbiter (0-100). Low novelty = deprioritized, not deleted.",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50
+    },
+    "embedding": {
+      "type": "array",
+      "description": "Semantic embedding vector for dedup (optional, stored for cosine similarity comparison).",
+      "items": { "type": "number" },
+      "default": []
+    },
+    "related_hypothesis": {
+      "type": "string",
+      "description": "Link to hypothesis file if promoted from idea to hypothesis.",
+      "default": ""
+    },
+    "created_at": {
+      "type": "string",
+      "description": "ISO 8601 creation timestamp.",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "description": "ISO 8601 last update timestamp.",
+      "format": "date-time"
+    },
+    "family": {
+      "type": "string",
+      "description": "Hypothesis family this idea belongs to (for family exhaustion tracking).",
+      "default": ""
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Flexible metadata for extension.",
+      "default": {}
+    }
+  },
+  "required": ["schema_version", "id", "title", "description", "source", "created_at"],
+  "additionalProperties": false
+}

@@ -1,0 +1,18 @@
+lockVersion: praxis-plan-lock/v0.1
+planSpecVersion: 0.1.0
+kind: ImplementationPlan
+profile: praxis-v0.1
+planId: HERMES-13
+title: Global budget pool
+createdAt: 2026-07-08T12:00:00Z
+updatedAt: 2026-07-08T10:24:34.281Z
+hashes:
+  planHash: 04959884aa5180fb558bc436f81d9d2c31e65a909a609690665802f40b2c3055
+  acceptanceCriteriaHash: fd0b0d5e21515e83a7593458279962c5bca2002eb8777c43e628ab4b300c769a
+  artifactPolicyHash: ab4b5be181f2da7040993ba56f789c406933e8b3b0ea0b695e4ce3d531e30422
+  integrationContractHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  commandPolicyHash: 7685c14763c960a308545b13526aed20eeb80e9ea8ab340992d280c0a0241828
+  allowedFilesHash: b2f845b9f2f1dffeae7332a0bd567409cae2868f44510b5656a599cbc55f17ec
+  forbiddenFilesHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+source:
+  schemaPath: schemas/planspec.v0.1.schema.yaml

@@ -1,0 +1,18 @@
+lockVersion: praxis-plan-lock/v0.1
+planSpecVersion: 0.1.0
+kind: ImplementationPlan
+profile: praxis-v0.1
+planId: HERMES-2
+title: Proje registry
+createdAt: 2026-07-08T12:00:00Z
+updatedAt: 2026-07-08T10:25:06.279Z
+hashes:
+  planHash: ca9a7b4b908efd97ee8ff28b0cda7e7b9bbb59d75ed8e461b8bf126680c210fd
+  acceptanceCriteriaHash: 2717d2037102891547396788fba66bd3431b3e1f4c46cf38dc5d5b411610b384
+  artifactPolicyHash: ba71ae490ae2d6fcd63b547ebdb84ef92078d1db48f5f29b49bd458bbbe97747
+  integrationContractHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  commandPolicyHash: 7685c14763c960a308545b13526aed20eeb80e9ea8ab340992d280c0a0241828
+  allowedFilesHash: 1c99255f4b3ec93f7ef809c8cce0e63fa1c77e5a4911d720a7e60c5aaaa2637a
+  forbiddenFilesHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+source:
+  schemaPath: schemas/planspec.v0.1.schema.yaml

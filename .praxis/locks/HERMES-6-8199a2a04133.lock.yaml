@@ -1,0 +1,18 @@
+lockVersion: praxis-plan-lock/v0.1
+planSpecVersion: 0.1.0
+kind: ImplementationPlan
+profile: praxis-v0.1
+planId: HERMES-6
+title: Eternal Goal Engine
+createdAt: 2026-07-08T12:00:00Z
+updatedAt: 2026-07-08T10:25:08.287Z
+hashes:
+  planHash: 8199a2a04133135acefcebaf922161d36786ba69080ed36b57ebeb3723f66667
+  acceptanceCriteriaHash: 817a844eb07520fa9cfbc5470b772c9443413263eb21f69d9b5f9daf7791b27c
+  artifactPolicyHash: 19b59bc51771bcdfd971a930eee758a23ce001e504ea881110583690be113c3e
+  integrationContractHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  commandPolicyHash: 75d08297c13b3946221b521afa474df7422f480735c5519a167fe2405b6a82f9
+  allowedFilesHash: f998862ed76c08639f89885099d78beb0e62f88976db60e056790a11928dd049
+  forbiddenFilesHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+source:
+  schemaPath: schemas/planspec.v0.1.schema.yaml

@@ -1,0 +1,18 @@
+lockVersion: praxis-plan-lock/v0.1
+planSpecVersion: 0.1.0
+kind: ImplementationPlan
+profile: praxis-v0.1
+planId: HERMES-8
+title: Challenger/arbiter profiles
+createdAt: 2026-07-08T12:00:00Z
+updatedAt: 2026-07-08T10:24:31.540Z
+hashes:
+  planHash: 1e5b35ac7d3255e04675551b935e0fa8836276d27469f06e7ca352c795b95b2f
+  acceptanceCriteriaHash: ca5c91a0e0604b2815e80414f8501e05cd72ed353d31cfeeb12a4a39d15b6544
+  artifactPolicyHash: b5a6a6cb1354bfda38a2597f25b3cf39049905e6a4883ed0832f28beee2ccd16
+  integrationContractHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  commandPolicyHash: 75d08297c13b3946221b521afa474df7422f480735c5519a167fe2405b6a82f9
+  allowedFilesHash: 770e4f9dc559831a8992270e75ac7d65a536bb29b5dc57b591caa1063abedc84
+  forbiddenFilesHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+source:
+  schemaPath: schemas/planspec.v0.1.schema.yaml

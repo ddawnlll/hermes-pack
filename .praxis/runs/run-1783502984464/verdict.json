@@ -1,0 +1,447 @@
+{
+  "verdict": "FAIL",
+  "ok": false,
+  "attemptId": "run-1783502984464",
+  "planId": "unknown",
+  "planTitle": "",
+  "startedAt": "2026-07-08T09:29:44.586Z",
+  "finishedAt": "2026-07-08T09:29:44.779Z",
+  "gateVerdicts": [
+    {
+      "gateName": "SchemaGate",
+      "verdict": "FAIL",
+      "reasonCodes": [
+        "PLAN_SCHEMA_INVALID"
+      ],
+      "repairHint": "Fix PlanSpec YAML syntax, schema violations, or semantic errors listed in diagnostics."
+    }
+  ],
+  "totalGates": 1,
+  "passedGates": 0,
+  "heldGates": 0,
+  "failedGates": 1,
+  "diagnostics": [
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/authority/executor: must be equal to one of the allowed values",
+      "path": "/authority/executor",
+      "details": {
+        "keyword": "enum",
+        "params": {
+          "allowedValues": [
+            "ClaudeCode",
+            "Human",
+            "OtherAgent"
+          ]
+        },
+        "schemaPath": "#/$defs/authority/properties/executor/enum"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/execution/agent: must be equal to one of the allowed values",
+      "path": "/execution/agent",
+      "details": {
+        "keyword": "enum",
+        "params": {
+          "allowedValues": [
+            "claude-code"
+          ]
+        },
+        "schemaPath": "#/$defs/execution/properties/agent/enum"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/0: must NOT be valid",
+      "path": "/tasks/0/acceptanceCriteria/0",
+      "details": {
+        "keyword": "not",
+        "params": {},
+        "schemaPath": "#/allOf/1/not"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/0: must have required property 'humanApproved'",
+      "path": "/tasks/0/acceptanceCriteria/0",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "humanApproved"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/0: must have required property 'requiredEvidence'",
+      "path": "/tasks/0/acceptanceCriteria/0",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "requiredEvidence"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/0/verification: must have required property 'evidenceRefs'",
+      "path": "/tasks/0/acceptanceCriteria/0/verification",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "evidenceRefs"
+        },
+        "schemaPath": "#/$defs/verification/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/1: must NOT be valid",
+      "path": "/tasks/0/acceptanceCriteria/1",
+      "details": {
+        "keyword": "not",
+        "params": {},
+        "schemaPath": "#/allOf/1/not"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/1: must have required property 'humanApproved'",
+      "path": "/tasks/0/acceptanceCriteria/1",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "humanApproved"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/1: must have required property 'requiredEvidence'",
+      "path": "/tasks/0/acceptanceCriteria/1",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "requiredEvidence"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/1/verification: must have required property 'evidenceRefs'",
+      "path": "/tasks/0/acceptanceCriteria/1/verification",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "evidenceRefs"
+        },
+        "schemaPath": "#/$defs/verification/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/2: must NOT be valid",
+      "path": "/tasks/0/acceptanceCriteria/2",
+      "details": {
+        "keyword": "not",
+        "params": {},
+        "schemaPath": "#/allOf/1/not"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/2: must have required property 'humanApproved'",
+      "path": "/tasks/0/acceptanceCriteria/2",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "humanApproved"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/2: must have required property 'requiredEvidence'",
+      "path": "/tasks/0/acceptanceCriteria/2",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "requiredEvidence"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/2/verification: must have required property 'evidenceRefs'",
+      "path": "/tasks/0/acceptanceCriteria/2/verification",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "evidenceRefs"
+        },
+        "schemaPath": "#/$defs/verification/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/3: must NOT be valid",
+      "path": "/tasks/0/acceptanceCriteria/3",
+      "details": {
+        "keyword": "not",
+        "params": {},
+        "schemaPath": "#/allOf/1/not"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/3: must have required property 'humanApproved'",
+      "path": "/tasks/0/acceptanceCriteria/3",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "humanApproved"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/3: must have required property 'requiredEvidence'",
+      "path": "/tasks/0/acceptanceCriteria/3",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "requiredEvidence"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/3/verification: must have required property 'evidenceRefs'",
+      "path": "/tasks/0/acceptanceCriteria/3/verification",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "evidenceRefs"
+        },
+        "schemaPath": "#/$defs/verification/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/4: must NOT be valid",
+      "path": "/tasks/0/acceptanceCriteria/4",
+      "details": {
+        "keyword": "not",
+        "params": {},
+        "schemaPath": "#/allOf/1/not"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/4: must have required property 'humanApproved'",
+      "path": "/tasks/0/acceptanceCriteria/4",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "humanApproved"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/4: must have required property 'requiredEvidence'",
+      "path": "/tasks/0/acceptanceCriteria/4",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "requiredEvidence"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/4/verification: must have required property 'evidenceRefs'",
+      "path": "/tasks/0/acceptanceCriteria/4/verification",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "evidenceRefs"
+        },
+        "schemaPath": "#/$defs/verification/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/4/verification: must NOT have additional properties",
+      "path": "/tasks/0/acceptanceCriteria/4/verification",
+      "details": {
+        "keyword": "additionalProperties",
+        "params": {
+          "additionalProperty": "pattern"
+        },
+        "schemaPath": "#/$defs/verification/additionalProperties"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/5: must NOT be valid",
+      "path": "/tasks/0/acceptanceCriteria/5",
+      "details": {
+        "keyword": "not",
+        "params": {},
+        "schemaPath": "#/allOf/1/not"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/5: must have required property 'humanApproved'",
+      "path": "/tasks/0/acceptanceCriteria/5",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "humanApproved"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/5: must have required property 'requiredEvidence'",
+      "path": "/tasks/0/acceptanceCriteria/5",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "requiredEvidence"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/5/verification: must have required property 'evidenceRefs'",
+      "path": "/tasks/0/acceptanceCriteria/5/verification",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "evidenceRefs"
+        },
+        "schemaPath": "#/$defs/verification/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/6: must NOT be valid",
+      "path": "/tasks/0/acceptanceCriteria/6",
+      "details": {
+        "keyword": "not",
+        "params": {},
+        "schemaPath": "#/allOf/1/not"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/6: must have required property 'humanApproved'",
+      "path": "/tasks/0/acceptanceCriteria/6",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "humanApproved"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/6: must have required property 'requiredEvidence'",
+      "path": "/tasks/0/acceptanceCriteria/6",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "requiredEvidence"
+        },
+        "schemaPath": "#/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/tasks/0/acceptanceCriteria/6/verification: must have required property 'evidenceRefs'",
+      "path": "/tasks/0/acceptanceCriteria/6/verification",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "evidenceRefs"
+        },
+        "schemaPath": "#/$defs/verification/required"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/commands/validationEvidenceRules: must NOT have additional properties",
+      "path": "/commands/validationEvidenceRules",
+      "details": {
+        "keyword": "additionalProperties",
+        "params": {
+          "additionalProperty": "commandEvidenceRequired"
+        },
+        "schemaPath": "#/$defs/validationEvidenceRules/additionalProperties"
+      }
+    },
+    {
+      "code": "PLAN_SCHEMA_INVALID",
+      "severity": "error",
+      "message": "/gates: must have required property 'reasonCodes'",
+      "path": "/gates",
+      "details": {
+        "keyword": "required",
+        "params": {
+          "missingProperty": "reasonCodes"
+        },
+        "schemaPath": "#/$defs/gates/required"
+      }
+    }
+  ],
+  "final": null
+}

@@ -1,0 +1,14 @@
+# Ideas Engine — Seed Configuration
+# Each idea is a spark that may become a hypothesis.
+# See schema/ideas.schema.json for the full schema.
+schema_version: 1
+ideas:
+  - id: "idea-initial-001"
+    title: "Initial exploration"
+    description: "Explore the project codebase for initial improvement opportunities."
+    source: "codebase_scan"
+    status: "spark"
+    triage_score: 80
+    novelty_score: 70
+    created_at: "__HERMES_CREATED_AT__"
+    updated_at: "__HERMES_CREATED_AT__"

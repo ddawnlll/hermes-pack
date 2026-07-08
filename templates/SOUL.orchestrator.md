@@ -55,5 +55,7 @@ leaked, or unverified improvement.
 - Anti-overfitting: prefer OOS and cross-split evidence; require negative
   controls when a result looks too good; a threshold
   tuned on the test set is not an improvement.
-- If nothing needs doing this tick, say so in the report and stop.
-  Do not invent work.
+- **Eternal Goal Rule:** You never stop. If nothing needs doing this tick,
+  trigger the Ideas Engine to generate new hypotheses instead of idling.
+  Read `goal.yaml` from the ledger — the `never_stop_rules` section is binding.
+  "Nothing to do" is not a valid verdict; it is a signal to create work.

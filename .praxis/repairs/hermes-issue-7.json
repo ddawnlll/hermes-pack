@@ -1,0 +1,86 @@
+{
+  "packetVersion": "praxis-repair/v0.1",
+  "attemptId": "hermes-issue-7",
+  "planId": "HERMES-7",
+  "createdAt": "2026-07-08T10:24:30.642Z",
+  "triggerVerdict": "FAIL",
+  "failedGates": [
+    {
+      "gateName": "EvidenceGate",
+      "verdict": "FAIL",
+      "reasonCodes": [
+        "UNKNOWN_TASK_ID"
+      ],
+      "repairHint": "Evidence validation failed. See diagnostics for details."
+    }
+  ],
+  "failedCriteria": [],
+  "advisoryCriteria": [],
+  "strategies": [
+    {
+      "kind": "initial",
+      "description": "Standard repair — fix the specific failures identified below.",
+      "actions": [
+        "Review each failed criterion and its evidence.",
+        "Make targeted code changes to address the failures.",
+        "Re-run verification after changes."
+      ]
+    },
+    {
+      "kind": "tool_restrict",
+      "description": "Evidence collection may be incomplete.",
+      "actions": [
+        "Ensure diff evidence is generated for code changes.",
+        "Run tests to produce test_output evidence.",
+        "Check that file changes stay within allowed namespaces.",
+        "Avoid modifying forbidden files."
+      ]
+    },
+    {
+      "kind": "hint_inject",
+      "description": "General guidance for re-verification.",
+      "actions": [
+        "Run \"praxis verify\" after making changes to confirm fixes.",
+        "Check that all acceptance criteria are addressed.",
+        "Ensure human approval flag is set where needed."
+      ]
+    }
+  ],
+  "affectedFiles": [],
+  "summary": "Repair packet generated for attempt hermes-issue-7. 1 gate(s) non-passing, 0 criterion/criteria failed.",
+  "diagnostics": [
+    {
+      "code": "INVALID_GATE_SEQUENCE",
+      "severity": "warning",
+      "message": "Gates reasonCodes should include key \"LockGate\".",
+      "gate": "LockGate"
+    },
+    {
+      "code": "INVALID_GATE_SEQUENCE",
+      "severity": "warning",
+      "message": "Gates reasonCodes should include key \"WiringGate\".",
+      "gate": "WiringGate"
+    },
+    {
+      "code": "MISSING_REQUIRED_HASH_FIELD",
+      "severity": "warning",
+      "message": "Locking hashes should include \"integrationContractHash\".",
+      "path": "/locking/hashes"
+    },
+    {
+      "code": "LOCK_CREATED",
+      "severity": "info",
+      "message": "Lock file created at C:\\Users\\dresden\\Documents\\hermes-pack\\.praxis\\locks\\HERMES-7-17c9496a87a4.lock.yaml."
+    },
+    {
+      "code": "UNKNOWN_TASK_ID",
+      "severity": "error",
+      "message": "Evidence record EV-issue-7-DIFF-001: references unknown taskId \"task-issue-7\"."
+    },
+    {
+      "code": "UNKNOWN_TASK_ID",
+      "severity": "error",
+      "message": "Evidence record EV-issue-7-BUILD-001: references unknown taskId \"task-issue-7\"."
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+lockVersion: praxis-plan-lock/v0.1
+planSpecVersion: 0.1.0
+kind: ImplementationPlan
+profile: praxis-v0.1
+planId: HERMES-9
+title: Ideas Engine
+createdAt: 2026-07-08T12:00:00Z
+updatedAt: 2026-07-08T10:24:32.434Z
+hashes:
+  planHash: ce170466267a06d1fa434549a75d76d76195e70cc0dbf365ac27c0787a18e37a
+  acceptanceCriteriaHash: 635bccc1aa86aa9536c0526f25b25be1744549a7241100ff35c4b9adc6e04139
+  artifactPolicyHash: d4703187ae68fb649df56b088ed6f0d5af5c9d8f51d5b98dc8793faf39da7509
+  integrationContractHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  commandPolicyHash: e976c0643350ab059c9644b7825a020833015f0dabd54ae188b09e56ab58fae1
+  allowedFilesHash: 96de97ab553a912064b9594ee5dcfcbd8d7ffd6a38d23b7550ad289bdc47948d
+  forbiddenFilesHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+source:
+  schemaPath: schemas/planspec.v0.1.schema.yaml

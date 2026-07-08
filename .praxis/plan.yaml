@@ -1,0 +1,270 @@
+# PRAXIS PlanSpec v0.1 — Issue #1: Versioned Schema Contract
+planSpecVersion: "0.1.0"
+kind: "ImplementationPlan"
+profile: "praxis-v0.1"
+
+metadata:
+  planId: "HERMES-ISSUE-001"
+  title: "Versiyonlu şema sözleşmesi (state/control/goal/ideas/events + doğrulama)"
+  description: "Create versioned JSON Schema contracts for all ledger state files, integrate validation into tick-gate, and provide migration tooling."
+  createdAt: "2026-07-08T12:00:00Z"
+  humanId: "autonomous-agent"
+  status: "draft"
+
+authority:
+  executor: "MiMoCode"
+  completionAuthority: "PraxisTruthKernel"
+  agentSelfReportIsClaimOnly: true
+  criteriaSourceRequired: "human"
+  reportsAreEvidenceOnly: true
+  pluginOwnsTruth: false
+
+workspace:
+  root: "."
+  allowedFiles:
+    - "schema/*.schema.json"
+    - "templates/scripts/tick-gate.sh"
+    - "templates/state.json"
+    - "migrate-ledger.sh"
+    - "README.md"
+    - "schema/tests/*"
+  forbiddenFiles: []
+
+execution:
+  mode: "single_session"
+  agent: "mimocode"
+  autonomy: "implementation_allowed"
+  canModifyCode: true
+  canModifyPlan: false
+  canModifyAcceptanceCriteria: false
+  maxRepairLoops: 2
+
+tasks:
+  - id: "task-schema-contract"
+    title: "Versioned Schema Contract"
+    objective: "Create 5 JSON Schema files, integrate validation into tick-gate, provide migration and documentation."
+
+    implementation:
+      instructions:
+        - "Create schema/state.schema.json with schema_version, tick, worker_status, spend_today_usd, budget_usd, last_tick_at, board, gates, goal_status."
+        - "Create schema/control.schema.json with schema_version, mode (paused/running/killed), paths, budget, risk_based_gating."
+        - "Create schema/goal.schema.json with schema_version, goal_type, statement, success_criteria, never_stop_rules, stop_conditions."
+        - "Create schema/ideas.schema.json with schema_version, id, title, description, source, status, triage_score, embedding."
+        - "Create schema/events.schema.json with schema_version, event_id, timestamp, type, source, payload."
+        - "All schemas must have properties.schema_version with type: integer."
+        - "Update templates/state.json with unified field names."
+        - "Add schema validation to templates/scripts/tick-gate.sh using python."
+        - "Create migrate-ledger.sh for v1->v2 conversion."
+        - "Document schema_version bump procedure in README."
+      suggestedSteps:
+        - "Create 5 schema JSON files."
+        - "Write validation test suite."
+        - "Run tests to verify schemas are valid and correct."
+        - "Update tick-gate.sh with schema validation logic."
+        - "Update templates/state.json to match unified schema."
+        - "Create migrate-ledger.sh."
+        - "Document in README."
+      antiPatterns:
+        - "Do not remove existing adapter configs."
+        - "Do not break existing templates."
+      expectedOutputs:
+        - "5 schema files in schema/"
+        - "Updated templates/state.json"
+        - "Updated templates/scripts/tick-gate.sh with validation"
+        - "migrate-ledger.sh"
+        - "Schema tests in schema/tests/"
+        - "Updated README"
+
+    artifactPolicy:
+      class: "library_code"
+      wiringRequired: false
+      reachabilityRequired: false
+      executionRequired: false
+      deterministicEvidenceRequired: true
+      advisoryReviewAllowed: false
+
+    acceptanceCriteria:
+      - id: "AC-1"
+        description: "5 JSON Schema files in schema/, each with schema_version"
+        level: "required"
+        criteriaSource: "human"
+        verification:
+          type: "test_output"
+          commandRef: "CMD-VALIDATE-SCHEMA-FILES"
+          patterns:
+            - "PASS.*valid JSON"
+            - "PASS.*schema_version"
+          deterministic: true
+          canSatisfyFinalGate: true
+          advisoryOnly: false
+
+      - id: "AC-2"
+        description: "Valid state.json passes schema validation"
+        level: "required"
+        criteriaSource: "human"
+        verification:
+          type: "test_output"
+          commandRef: "CMD-TEST-SCHEMA"
+          patterns:
+            - "PASS.*Valid state.*passes"
+          deterministic: true
+          canSatisfyFinalGate: true
+          advisoryOnly: false
+
+      - id: "AC-3"
+        description: "Invalid state.json is rejected by schema validation"
+        level: "required"
+        criteriaSource: "human"
+        verification:
+          type: "test_output"
+          commandRef: "CMD-TEST-SCHEMA"
+          patterns:
+            - "PASS.*Invalid state.*rejected"
+          deterministic: true
+          canSatisfyFinalGate: true
+          advisoryOnly: false
+
+      - id: "AC-4"
+        description: "migrate-ledger.sh converts v1 to v2 without data loss"
+        level: "required"
+        criteriaSource: "human"
+        verification:
+          type: "test_output"
+          commandRef: "CMD-TEST-SCHEMA"
+          patterns:
+            - "PASS.*migrate.*correctly"
+          deterministic: true
+          canSatisfyFinalGate: true
+          advisoryOnly: false
+
+      - id: "AC-5"
+        description: "Schema version bump procedure documented in README"
+        level: "required"
+        criteriaSource: "human"
+        verification:
+          type: "file_exists"
+          path: "README.md"
+          pattern: "Schema Version Bump"
+          deterministic: true
+          canSatisfyFinalGate: true
+          advisoryOnly: false
+
+      - id: "AC-6"
+        description: "state.json template uses unified field names (schema_version, tick, worker_status, gates)"
+        level: "required"
+        criteriaSource: "human"
+        verification:
+          type: "test_output"
+          commandRef: "CMD-CHECK-STATE-TEMPLATE"
+          patterns:
+            - "OK"
+          deterministic: true
+          canSatisfyFinalGate: true
+          advisoryOnly: false
+
+      - id: "AC-7"
+        description: "All validation tests pass (0 failures)"
+        level: "required"
+        criteriaSource: "human"
+        verification:
+          type: "test_output"
+          commandRef: "CMD-TEST-SCHEMA"
+          patterns:
+            - "0 failed"
+          deterministic: true
+          canSatisfyFinalGate: true
+          advisoryOnly: false
+
+commands:
+  exactAllowedCommands:
+    - id: "CMD-VALIDATE-SCHEMA-FILES"
+      kind: "final_validation"
+      command: "python -c \"import os,json,glob; files=glob.glob('schema/*.schema.json'); print(f'Found {len(files)} schema files'); [exec(open(f).read()) or print(f'OK: '+os.path.basename(f)) for f in files if json.load(open(f))]\""
+      evidenceRequired: true
+      timeoutSeconds: 30
+      noTestsFoundIsFailure: true
+      expectedExitCode: 0
+
+    - id: "CMD-TEST-SCHEMA"
+      kind: "final_validation"
+      command: "python schema/tests/test_schema_validation.py"
+      evidenceRequired: true
+      timeoutSeconds: 60
+      noTestsFoundIsFailure: true
+      expectedExitCode: 0
+      networkAllowed: false
+      shellAllowed: true
+
+    - id: "CMD-CHECK-STATE-TEMPLATE"
+      kind: "final_validation"
+      command: "python -c \"import json; t=json.load(open('templates/state.json')); assert 'schema_version' in t; assert 'tick' in t; assert 'worker_status' in t; assert 'gates' in t; assert 'goal_status' in t; assert 'spend_today_usd' in t; print('OK')\""
+      evidenceRequired: true
+      timeoutSeconds: 30
+      noTestsFoundIsFailure: true
+      expectedExitCode: 0
+
+  validationEvidenceRules:
+    finalPromotionRequiresExactAllowedCommand: true
+    discoveryCommandsMayNotSatisfyFinalValidation: true
+    runtimeGrantCommandsCanSatisfyValidationOnlyIfGrantStatesValidationPurpose: true
+    commandEvidenceRequired: true
+
+  hardDeniedCommands:
+    - command: "rm -rf"
+      reason: "Destructive operation."
+    - command: "git push --force"
+      reason: "Force push is dangerous."
+
+evidence:
+  ledgerRequired: true
+  requiredEvidenceTypes:
+    - "diff"
+    - "source"
+    - "command"
+    - "test_output"
+  hashWhenAvailable: true
+
+gates:
+  sequence:
+    - "SchemaGate"
+    - "LockGate"
+    - "EvidenceGate"
+    - "WiringGate"
+    - "ExecGate"
+    - "FinalGate"
+  verdicts:
+    - "PASS"
+    - "HOLD"
+    - "FAIL"
+
+repair:
+  enabled: true
+  failedCriteriaOnly: true
+  mayModifyAcceptanceCriteria: false
+  mayModifyPlan: false
+  allowedFilesFromFailedTasksOnly: true
+  maxRepairLoops: 2
+  reverifyCommand: "python schema/tests/test_schema_validation.py"
+  repairPacketFormat:
+    json: true
+    markdown: true
+
+locking:
+  lockRequired: true
+  canonicalHashRequired: true
+  planLockFile: ".praxis/planspec.lock"
+  hashes:
+    - "planHash"
+    - "acceptanceCriteriaHash"
+    - "artifactPolicyHash"
+    - "commandPolicyHash"
+    - "allowedFilesHash"
+    - "forbiddenFilesHash"
+
+reports:
+  protocol: "ACCP"
+  artifactDirectory: "reports/"
+  reportsAreEvidenceOnly: true
+  reportsDoNotAuthorizeExecution: true
+  commandEvidenceRequired: true
+  repairPacketRequiredOnHoldOrFail: true

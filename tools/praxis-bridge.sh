@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Praxis Bridge — Hermes Pack ⟶ real Praxis CLI integration
 # ===========================================================
-# This is the ONLY file in hermes-pack that calls the Praxis Truth Kernel.
+# This is the ONLY file in Hephaestus that calls the Praxis Truth Kernel.
 # All Praxix gate logic lives in the ddawnlll/praxis submodule.
 # Hermes Pack does NOT reimplement any gate logic.
 #
