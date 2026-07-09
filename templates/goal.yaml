@@ -21,9 +21,10 @@ never_stop_rules:
   exhaustion_policy: generate_ideas  # never "stop" — always generate new ideas
 
 # Conditions that MAY stop goal pursuit (safety valves)
+# NOTE: T4 disputes are PARKED when human is AFK; system continues with other
+# hypotheses. The old 72-hour human-gate hard-stop was removed (issue #31).
 stop_conditions:
   - budget_exhausted
   - mode:killed
-  - human_gate_pending>72h
 
 goal_status: in_progress

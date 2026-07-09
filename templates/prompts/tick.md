@@ -60,6 +60,10 @@ After Praxis PASS:
 
 **T4 Human (if constitutional/critical):**
 - Escalate to human review
+- Run `escalation-gate.sh` deterministically:
+  - human_available + t4_budget > 0 → async digest queue (weekly cap)
+  - human_available = false (AFK) → **PARK** + safe-default **HOLD**. Continue with other hypotheses. No global stall.
+  - t4_budget <= 0 → HOLD (budget exhausted)
 
 ### Phase 4: Memory & Merge
 - **Praxis PASS + gate verdict →** write verified facts to memory
