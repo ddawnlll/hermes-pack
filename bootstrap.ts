@@ -295,7 +295,48 @@ async function loadAdapter(name: string): Promise<{ config: AdapterConfig; dir: 
       raw.max_llm_spend_per_day_usd ?? DEFAULTS.max_llm_spend_per_day_usd,
   };
 
+  validateChainDecorrelation(config, name);
+
   return { config, dir };
+}
+
+// ─── Provider-chain decorrelation validation (#22) ─────────────────────────
+
+function getModelFamily(modelId: string | undefined): string {
+  if (!modelId) return "";
+  // Strip provider prefix (e.g. "openrouter/deepseek/deepseek-chat" → "deepseek/deepseek-chat")
+  let stripped = modelId;
+  if (stripped.includes("/")) {
+    const firstSlash = stripped.indexOf("/");
+    const rest = stripped.slice(firstSlash + 1);
+    // If rest has another slash, treat first segment as provider, second as family
+    if (rest.includes("/")) {
+      stripped = rest;
+    }
+  }
+  // Family = first segment before any slash
+  return stripped.split("/")[0] || "";
+}
+
+function validateChainDecorrelation(config: AdapterConfig, adapterName: string): void {
+  const p = config.hermes.provider;
+  const w0 = getModelFamily(p.worker_chain?.[0]);
+  const c0 = getModelFamily(p.challenger_chain?.[0]);
+  const o0 = getModelFamily(p.orchestrator_chain?.[0]);
+  const a0 = getModelFamily(p.arbiter_chain?.[0]);
+
+  if (w0 && c0 && w0 === c0) {
+    die(
+      `Adapter '${adapterName}': worker_chain[0] and challenger_chain[0] have the same model family "${w0}". ` +
+      `They MUST be different for adversarial council decorrelation (issue #22).`,
+    );
+  }
+  if (o0 && a0 && o0 === a0) {
+    die(
+      `Adapter '${adapterName}': orchestrator_chain[0] and arbiter_chain[0] have the same model family "${o0}". ` +
+      `They MUST be different for adversarial council decorrelation (issue #22).`,
+    );
+  }
 }
 
 // ─── Template substitution ──────────────────────────────────────────────────
