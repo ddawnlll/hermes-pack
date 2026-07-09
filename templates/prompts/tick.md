@@ -46,7 +46,8 @@ After Praxis PASS:
 **T1 Proposer:**
 - Read the evidence bundle (runner JSON, test outputs, diff)
 - Read the original task contract
-- Produce a verdict: merge or reject
+- Produce a verdict: merge or reject **recommendation only**
+- **The orchestrator NEVER merges its own proposal. Merge execution requires an Arbiter (T3) binding verdict.**
 
 **T2 Challenger (if risk >= medium):**
 - Different model profile (read-only, blind — doesn't see T1 reasoning)
@@ -56,10 +57,13 @@ After Praxis PASS:
 
 **T3 Arbiter (if disagreement):**
 - Reads RAW evidence only
-- Makes binding decision
+- Makes **binding** merge/reject decision
+- Orchestrator executes the Arbiter's decision (applies merge, creates PR, etc.)
 
 **T4 Human (if constitutional/critical):**
 - Escalate to human review
+- If human is not available (AFK), the task is PARKED with safe-default HOLD.
+  The orchestrator continues processing other hypotheses. No global stall.
 
 ### Phase 4: Memory & Merge
 - **Praxis PASS + gate verdict →** write verified facts to memory
