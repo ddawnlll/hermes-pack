@@ -22,7 +22,14 @@
       "description": "Map of worker names to their current status.",
       "additionalProperties": {
         "type": "string",
-        "enum": ["idle", "running", "blocked", "completed", "failed", "killed"]
+        "enum": [
+          "idle",
+          "running",
+          "blocked",
+          "completed",
+          "failed",
+          "killed"
+        ]
       },
       "default": {}
     },
@@ -38,8 +45,31 @@
       "minimum": 0,
       "default": 25
     },
+    "curiosity_budget_usd": {
+      "type": "number",
+      "description": "Protected discovery budget (min 20% of budget_usd). ROI/self-grade gates cannot touch this.",
+      "minimum": 0,
+      "default": 5.0
+    },
+    "curiosity_ratio": {
+      "type": "number",
+      "description": "Current curiosity budget ratio (0.20 to 0.50).",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.2
+    },
+    "explorer_hit_rate": {
+      "type": "number",
+      "description": "Explorer recent hit rate (0.0-1.0) for adaptive curiosity budget.",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.0
+    },
     "last_tick_at": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "ISO 8601 timestamp of the last tick, or null.",
       "format": "date-time",
       "default": null
@@ -53,11 +83,31 @@
       "type": "object",
       "description": "Gate pass counters per gate level.",
       "properties": {
-        "T0": { "type": "integer", "minimum": 0, "default": 0 },
-        "T1": { "type": "integer", "minimum": 0, "default": 0 },
-        "T2": { "type": "integer", "minimum": 0, "default": 0 },
-        "T3": { "type": "integer", "minimum": 0, "default": 0 },
-        "T4": { "type": "integer", "minimum": 0, "default": 0 }
+        "T0": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "T1": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "T2": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "T3": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "T4": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        }
       },
       "additionalProperties": false,
       "default": {}
@@ -65,10 +115,19 @@
     "goal_status": {
       "type": "string",
       "description": "Current goal status from goal.yaml evaluation.",
-      "enum": ["in_progress", "achieved", "blocked", "exhausted", "none"],
+      "enum": [
+        "in_progress",
+        "achieved",
+        "blocked",
+        "exhausted",
+        "none"
+      ],
       "default": "none"
     }
   },
-  "required": ["schema_version", "tick"],
+  "required": [
+    "schema_version",
+    "tick"
+  ],
   "additionalProperties": false
 }
