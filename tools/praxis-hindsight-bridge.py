@@ -6,8 +6,9 @@ Writes a Praxis Truth Kernel verdict to Hindsight memory.
 Usage:
   python3 tools/praxis-hindsight-bridge.py <run_id> [--hindsight-url http://localhost:9885] [--bank-id hermes]
 
-Called by orchestrator after Praxis PASS + gate verdict.
-Only writes if verdict is PASS.
+Called by orchestrator after Praxis verdict.
+Writes PASS verdicts as verified_research_result.
+Writes FAIL verdicts as refuted_hypothesis (scar-tissue memory, issue #23).
 """
 import json, sys, os, argparse, urllib.request
 
@@ -33,8 +34,12 @@ def main():
         verdict = json.load(f)
 
     verdict_status = verdict.get("verdict", verdict.get("status", "UNKNOWN"))
-    if verdict_status != "PASS":
-        print(f"[praxis-hindsight] Skipping: verdict is '{verdict_status}', not PASS")
+    is_pass = verdict_status == "PASS"
+    is_fail = verdict_status in ("FAIL", "HOLD")
+
+    # Issue #23: write FAIL verdicts as refuted_hypothesis (scar-tissue memory)
+    if not is_pass and not is_fail:
+        print(f"[praxis-hindsight] Skipping: verdict is '{verdict_status}', not PASS/FAIL/HOLD")
         sys.exit(0)
 
     # Extract facts from gate result
@@ -59,17 +64,31 @@ def main():
 
     # Build Hindsight items
     items = []
-    for fact in facts[:5]:  # limit to 5
-        items.append({
-            "content": f"[Praxis] {fact}",
-            "source": "praxis_truth_kernel",
-            "metadata": {
-                "run_id": args.run_id,
-                "verdict": verdict_status,
-                "type": "verified_research_result",
-                "confidence": "0.95"
-            }
-        })
+    if is_pass:
+        for fact in facts[:5]:  # limit to 5
+            items.append({
+                "content": f"[Praxis] {fact}",
+                "source": "praxis_truth_kernel",
+                "metadata": {
+                    "run_id": args.run_id,
+                    "verdict": verdict_status,
+                    "type": "verified_research_result",
+                    "confidence": "0.95"
+                }
+            })
+    else:
+        # FAIL / HOLD → refuted_hypothesis (scar-tissue, issue #23)
+        for fact in facts[:5]:
+            items.append({
+                "content": f"[Praxis REFUTED] {fact}",
+                "source": "praxis_truth_kernel",
+                "metadata": {
+                    "run_id": args.run_id,
+                    "verdict": verdict_status,
+                    "type": "refuted_hypothesis",
+                    "confidence": "0.3"
+                }
+            })
 
     # Send to Hindsight
     url = f"{args.hindsight_url}/v1/default/banks/{args.bank_id}/memories"

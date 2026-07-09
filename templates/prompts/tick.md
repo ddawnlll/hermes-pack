@@ -46,7 +46,8 @@ After Praxis PASS:
 **T1 Proposer:**
 - Read the evidence bundle (runner JSON, test outputs, diff)
 - Read the original task contract
-- Produce a verdict: merge or reject
+- Produce a verdict: merge or reject **recommendation only**
+- **The orchestrator NEVER merges its own proposal. Merge execution requires an Arbiter (T3) binding verdict.**
 
 **T2 Challenger (if risk >= medium):**
 - Different model profile (read-only, blind — doesn't see T1 reasoning)
@@ -56,7 +57,8 @@ After Praxis PASS:
 
 **T3 Arbiter (if disagreement):**
 - Reads RAW evidence only
-- Makes binding decision
+- Makes **binding** merge/reject decision
+- Orchestrator executes the Arbiter's decision (applies merge, creates PR, etc.)
 
 **T4 Human (if constitutional/critical):**
 - Escalate to human review
@@ -65,6 +67,7 @@ After Praxis PASS:
   - human_available = false (AFK) → **PARK** + safe-default **HOLD**. Continue with other hypotheses. No global stall.
   - t4_budget <= 0 → HOLD (budget exhausted)
 
+
 ### Phase 4: Memory & Merge
 - **Praxis PASS + gate verdict →** write verified facts to memory
 - **Workers CANNOT write memory** — only orchestrator after verification
@@ -72,9 +75,10 @@ After Praxis PASS:
 
 ### Phase 5: Dispatch New Work
 If capacity available:
-1. Select highest-priority hypothesis
-2. Create Context Capsule (allowed paths, required context, acceptance criteria)
-3. Dispatch worker on isolated branch
+1. **Check scar-tissue memory first** — query Hindsight for `type: refuted_hypothesis` records with similar keywords. Do NOT re-dispatch a hypothesis that has been previously refuted (issue #23).
+2. Select highest-priority hypothesis
+3. Create Context Capsule (allowed paths, required context, acceptance criteria)
+4. Dispatch worker on isolated branch
 
 ## Hard Rules
 - **Praxis before T1.** No LLM gate runs before deterministic verification.

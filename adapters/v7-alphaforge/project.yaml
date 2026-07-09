@@ -26,16 +26,16 @@ hermes:
       - "deepseek/deepseek-chat"            # fallback 1
       - "ollama/llama3"                     # local fallback (never-dies)
     worker_chain:
-      - "deepseek/deepseek-chat"            # primary (cheap)
+      - "openrouter/mistralai/mistral-small"  # primary (cheap, DIFFERENT from challenger)
       - "ollama/llama3"                     # local fallback
     challenger_model: "openrouter/deepseek/deepseek-chat"
     challenger_chain:
-      - "deepseek/deepseek-chat"            # different from orchestrator
+      - "deepseek/deepseek-chat"            # different model family from worker
       - "ollama/llama3"                     # local fallback
-    arbiter_model: "anthropic/claude-sonnet-4-20250514"
+    arbiter_model: "anthropic/gpt-4o"
     arbiter_chain:
-      - "claude-sonnet-4-20250514"          # premium
-      - "deepseek/deepseek-chat"            # mid fallback
+      - "gpt-4o"                            # premium (DIFFERENT from orchestrator)
+      - "claude-sonnet-4-20250514"          # mid fallback
       - "ollama/llama3"                     # local fallback
 
 paths:

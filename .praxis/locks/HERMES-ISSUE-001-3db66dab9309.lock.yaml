@@ -1,0 +1,18 @@
+lockVersion: praxis-plan-lock/v0.1
+planSpecVersion: 0.1.0
+kind: ImplementationPlan
+profile: praxis-v0.1
+planId: HERMES-ISSUE-001
+title: Versiyonlu şema sözleşmesi (state/control/goal/ideas/events + doğrulama)
+createdAt: 2026-07-08T12:00:00Z
+updatedAt: 2026-07-09T02:39:43.338Z
+hashes:
+  planHash: 3db66dab9309e0db4205c8e2ec4b43c47f109098a67540e3fc454a72a917b48e
+  acceptanceCriteriaHash: 38acb3d7f95971fbb77238b822e0e69b03800c27d461108e78af956fd8c2fa27
+  artifactPolicyHash: e0c8fada3c3a1c164fe784717ea086b8aa1d794f9dfa8d6af59eec8d5390e3f4
+  integrationContractHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  commandPolicyHash: e9ae2f21218ab270f372e12716a88982dd3469c8aab1a2c226878540edca23d8
+  allowedFilesHash: f7a0b52804d8c411d55242318aae2228757d8b9b435551d5b2cda39839f611f6
+  forbiddenFilesHash: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+source:
+  schemaPath: schemas/planspec.v0.1.schema.yaml
