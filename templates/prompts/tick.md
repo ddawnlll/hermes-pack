@@ -23,7 +23,21 @@ For each completed worker run:
 2. If evidence exists and looks complete → proceed to Praxis verification
 3. Missing evidence → reject without LLM
 
-### Phase 2: Praxis Truth Kernel Verification
+### Phase 2: Pre-registration Verification ($0 Gate)
+Before Praxis runs, verify that the worker's reported metric matches the pre-registered lock:
+
+```bash
+bash templates/scripts/prereg-verify.sh <task_id> <reported_metric> <reported_direction> <reported_threshold>
+```
+
+- Reads the lock file created at dispatch time (`{ledger}/prereg/<task_id>.lock`)
+- Compares reported metric name, direction, and threshold against locked values
+- Verifies SHA-256 hash for tamper detection
+- On mismatch → **FAIL** (p-hacking detected) — do not proceed to Praxis
+
+Exit codes: 0=PASS, 1=FAIL (verdict mismatch), 2=error (no lock file)
+
+### Phase 3: Praxis Truth Kernel Verification
 Praxis (`ddawnlll/praxis`) is the independent Truth Kernel. Run it on worker evidence:
 
 ```bash
@@ -40,7 +54,7 @@ Praxis runs 6 gates:
 
 Exit codes: 0=PASS, 1=HOLD, 2=FAIL
 
-### Phase 3: Tri-Gate Pipeline (LLM Gates)
+### Phase 4: Tri-Gate Pipeline (LLM Gates)
 After Praxis PASS:
 
 **T1 Proposer:**
@@ -61,18 +75,20 @@ After Praxis PASS:
 **T4 Human (if constitutional/critical):**
 - Escalate to human review
 
-### Phase 4: Memory & Merge
-- **Praxis PASS + gate verdict →** write verified facts to memory
+### Phase 5: Memory & Merge
+- **Pre-registration PASS + Praxis PASS + gate verdict →** write verified facts to memory
 - **Workers CANNOT write memory** — only orchestrator after verification
 - **Merge policy:** PR-only, never direct
 
-### Phase 5: Dispatch New Work
+### Phase 6: Dispatch New Work
 If capacity available:
 1. Select highest-priority hypothesis
-2. Create Context Capsule (allowed paths, required context, acceptance criteria)
-3. Dispatch worker on isolated branch
+2. **Pre-register metric:** run `bash templates/scripts/prereg-lock.sh <task_id> <hypothesis_id> <metric_name> <direction> <threshold>` — this locks the metric before the worker sees results (anti p-hacking)
+3. Create Context Capsule (allowed paths, required context, acceptance criteria)
+4. Dispatch worker on isolated branch
 
 ## Hard Rules
+- **$0 gate before Praxis.** Pre-registration verification runs before all other gates. Metric must match the locked value or the run is rejected immediately.
 - **Praxis before T1.** No LLM gate runs before deterministic verification.
 - **No evidence = no claim.** Worker output without evidence is invalid.
 - **Workers don't write memory.** Ever.
