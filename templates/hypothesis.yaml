@@ -1,0 +1,19 @@
+# Hephaestus Hypothesis Template
+# Each hypothesis MUST have relies_on ([] when empty).
+# schema_version must match hypothesis.schema.json
+schema_version: 1
+id: "__HERMES_HYPOTHESIS_ID__"
+title: "__HERMES_HYPOTHESIS_TITLE__"
+description: "__HERMES_HYPOTHESIS_DESCRIPTION__"
+family: ""
+relies_on: []
+status: draft
+risk_level: medium
+metric_name: ""
+threshold: ""
+direction: ">="
+provenance: []
+created_at: "__HERMES_TIMESTAMP__"
+updated_at: "__HERMES_TIMESTAMP__"
+ttl: 48
+metadata: {}

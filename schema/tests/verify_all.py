@@ -1,8 +1,8 @@
 """Run Praxis verify on all per-issue PlanSpecs and report results."""
 import subprocess, json, os, sys
 
-REPO = r"C:\Users\dresden\Documents\hermes-pack"
-CLI = r"C:\Users\dresden\AppData\Roaming\npm\node_modules\@praxis\cli\dist\cli.js"
+REPO = os.environ.get("HEPHAESTUS_REPO", os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+CLI = os.environ.get("PRAXIS_CLI", os.path.join(REPO, "../praxis/packages/cli/src/cli.ts"))
 PLAN_DIR = os.path.join(REPO, ".praxis")
 EVIDENCE_BASE = os.path.join(PLAN_DIR, "runs", "evidence.jsonl")
 

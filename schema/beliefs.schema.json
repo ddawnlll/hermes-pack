@@ -1,0 +1,177 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ddawnlll/hephaestus/schema/beliefs.schema.json",
+  "title": "Hephaestus Beliefs Workspace Schema",
+  "description": "Schema for beliefs.yaml — the capacity-limited workspace of consolidated beliefs. Only the Reflector writes beliefs. Every belief must have a falsifiable kill_criterion.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "description": "Schema version number. Bump when making backward-incompatible changes.",
+      "minimum": 1,
+      "default": 1
+    },
+    "beliefs": {
+      "type": "array",
+      "description": "List of consolidated beliefs. Capacity-limited (max 128 entries).",
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique belief identifier (e.g. BEL-001)."
+          },
+          "statement": {
+            "type": "string",
+            "description": "The belief statement — a falsifiable claim about the codebase or process."
+          },
+          "kill_criterion": {
+            "type": "string",
+            "description": "Falsifiable condition that would invalidate this belief. Mandatory — beliefs without kill_criterion are invalid."
+          },
+          "confidence": {
+            "type": "string",
+            "description": "Confidence level based on evidence strength.",
+            "enum": ["high", "medium", "low", "speculative"],
+            "default": "medium"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current belief lifecycle status.",
+            "enum": ["active", "suspect", "refuted", "evicted"],
+            "default": "active"
+          },
+          "stagnation": {
+            "type": "integer",
+            "description": "Number of ticks since this belief last produced a positive outcome. Monotonically increasing while dormant.",
+            "minimum": 0,
+            "default": 0
+          },
+          "momentum": {
+            "type": "number",
+            "description": "Momentum score for this belief. Positive = reinforcing evidence accumulating. Negative = erosion. Zero = neutral.",
+            "default": 0
+          },
+          "ttl": {
+            "type": "integer",
+            "description": "Time-to-live in ticks. When TTL expires, belief is eligible for eviction review.",
+            "minimum": 1,
+            "default": 24
+          },
+          "cooldown_remaining": {
+            "type": "integer",
+            "description": "Ticks remaining in cooldown after a frame shift or ratchet direction change. Zero = not in cooldown.",
+            "minimum": 0,
+            "default": 0
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 creation timestamp.",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 last updated timestamp.",
+            "format": "date-time"
+          },
+          "provenance": {
+            "type": "array",
+            "description": "Provenance trail — records of what evidence/channels created or modified this belief.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "description": "Source of the provenance record: channel name (reflector, analogy, replay, dream, whisper, calibration, experiment) or external reference."
+                },
+                "hypothesis_id": {
+                  "type": "string",
+                  "description": "Hypothesis ID that generated the evidence, if applicable.",
+                  "default": ""
+                },
+                "run_id": {
+                  "type": "string",
+                  "description": "Run ID that produced the evidence, if applicable.",
+                  "default": ""
+                },
+                "timestamp": {
+                  "type": "string",
+                  "description": "ISO 8601 timestamp of the evidence.",
+                  "format": "date-time"
+                },
+                "summary": {
+                  "type": "string",
+                  "description": "Brief description of what evidence contributed."
+                }
+              },
+              "required": ["source", "timestamp"],
+              "additionalProperties": false
+            },
+            "default": []
+          },
+          "evidence_refs": {
+            "type": "array",
+            "description": "References to evidence ledger records supporting this belief.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "type": "string",
+                  "description": "Evidence record ID from the ledger."
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Evidence type: source, test_output, diff, metric, or ledger_record."
+                },
+                "summary": {
+                  "type": "string",
+                  "description": "Brief description of what this evidence shows."
+                }
+              },
+              "required": ["record_id", "type"],
+              "additionalProperties": false
+            },
+            "default": []
+          }
+        },
+        "required": ["id", "statement", "kill_criterion", "created_at"],
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "capacity": {
+      "type": "object",
+      "description": "Workspace capacity tracking.",
+      "properties": {
+        "max_beliefs": {
+          "type": "integer",
+          "description": "Maximum number of beliefs allowed.",
+          "minimum": 8,
+          "maximum": 1024,
+          "default": 128
+        },
+        "eviction_strategy": {
+          "type": "string",
+          "description": "Strategy for eviction when capacity is reached.",
+          "enum": ["lowest_confidence", "oldest_active", "highest_stagnation", "lru"],
+          "default": "lowest_confidence"
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "narrative": {
+      "type": "string",
+      "description": "One-page bounded causal summary. Rewritten (never append-only) by the Reflector each consolidation cycle. Ledger remains the source of truth.",
+      "default": ""
+    },
+    "updated_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp of last update.",
+      "format": "date-time"
+    }
+  },
+  "required": ["schema_version", "beliefs"],
+  "additionalProperties": false
+}
