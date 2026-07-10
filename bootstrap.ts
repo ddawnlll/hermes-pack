@@ -60,6 +60,8 @@ interface AdapterConfig {
       challenger_chain?: string[];
       arbiter_model?: string;
       arbiter_chain?: string[];
+      reflector_model?: string;
+      reflector_chain?: string[];
     };
   };
   paths: { ledger: string };
@@ -111,6 +113,12 @@ const DEFAULTS: AdapterConfig = {
       ],
       arbiter_model: "anthropic/claude-sonnet-4-20250514",
       arbiter_chain: [
+        "claude-sonnet-4-20250514",
+        "deepseek/deepseek-chat",
+        "ollama/llama3",
+      ],
+      reflector_model: "openrouter/anthropic/claude-sonnet-4-20250514",
+      reflector_chain: [
         "claude-sonnet-4-20250514",
         "deepseek/deepseek-chat",
         "ollama/llama3",
@@ -275,6 +283,8 @@ async function loadAdapter(name: string): Promise<{ config: AdapterConfig; dir: 
         challenger_chain: p.challenger_chain ?? DEFAULTS.hermes.provider.challenger_chain,
         arbiter_model: p.arbiter_model ?? DEFAULTS.hermes.provider.arbiter_model,
         arbiter_chain: p.arbiter_chain ?? DEFAULTS.hermes.provider.arbiter_chain,
+        reflector_model: p.reflector_model ?? DEFAULTS.hermes.provider.reflector_model,
+        reflector_chain: p.reflector_chain ?? DEFAULTS.hermes.provider.reflector_chain,
       },
     },
     paths: {
@@ -337,6 +347,13 @@ function validateChainDecorrelation(config: AdapterConfig, adapterName: string):
       `They MUST be different for adversarial council decorrelation (issue #22).`,
     );
   }
+  const r0 = getModelFamily(p.reflector_chain?.[0]);
+  if (o0 && r0 && o0 === r0) {
+    die(
+      `Adapter '${adapterName}': orchestrator_chain[0] and reflector_chain[0] have the same model family "${o0}". ` +
+      `Reflector MUST be decorrelated from orchestrator (issue #57).`,
+    );
+  }
 }
 
 // ─── Template substitution ──────────────────────────────────────────────────
@@ -387,6 +404,10 @@ function makeSubstVars(
     __HERMES_ARBITER_CHAIN_0__: (p.arbiter_chain ?? [])[0] ?? p.arbiter_model ?? opts.orchModel,
     __HERMES_ARBITER_CHAIN_1__: (p.arbiter_chain ?? [])[1] ?? (p.arbiter_chain ?? [])[0] ?? opts.orchModel,
     __HERMES_ARBITER_CHAIN_2__: (p.arbiter_chain ?? [])[2] ?? (p.arbiter_chain ?? [])[0] ?? opts.orchModel,
+    __HERMES_REFLECTOR_MODEL__: p.reflector_model ?? (p.reflector_chain ?? [])[0] ?? p.orchestrator_chain?.[0] ?? opts.orchModel,
+    __HERMES_REFLECTOR_CHAIN_0__: (p.reflector_chain ?? [])[0] ?? p.reflector_model ?? (p.orchestrator_chain ?? [])[0] ?? opts.orchModel,
+    __HERMES_REFLECTOR_CHAIN_1__: (p.reflector_chain ?? [])[1] ?? (p.reflector_chain ?? [])[0] ?? (p.orchestrator_chain ?? [])[0] ?? opts.orchModel,
+    __HERMES_REFLECTOR_CHAIN_2__: (p.reflector_chain ?? [])[2] ?? (p.reflector_chain ?? [])[0] ?? (p.orchestrator_chain ?? [])[0] ?? opts.orchModel,
   };
 }
 
@@ -659,6 +680,10 @@ async function main() {
     dr(`  hermes profile create ${pWkr}-arbiter (if missing) — binding decision, premium model`);
     dr(`  sub templates/config.worker.yaml > profiles/${pWkr}-arbiter/config.yaml`);
     dr(`  sub templates/SOUL.worker.md > profiles/${pWkr}-arbiter/SOUL.md`);
+    dr(`install profile 'reflector':`);
+    dr(`  hermes profile create reflector (if missing) — consolidation agent, shadow mode`);
+    dr(`  sub templates/config.worker.yaml > profiles/reflector/config.yaml`);
+    dr(`  sub templates/SOUL.reflector.md > profiles/reflector/SOUL.md`);
 
     dr(`mkdir -p ${HERMES_SCRIPTS}`);
     dr(`sub templates/scripts/tick-gate.sh > ${HERMES_SCRIPTS}/${config.hermes.tick_name}-gate.sh`);
@@ -669,6 +694,8 @@ async function main() {
 
     const ledgerDir = join(repoDir, config.paths.ledger);
     dr(`mkdir -p ${ledgerDir}/{hypotheses,runs,reports}`);
+    dr(`mkdir -p ${ledgerDir}/{beliefs,provenance,reflector}`);
+    dr(`mkdir -p ${ledgerDir}/{whispers,analogies,dreams}`);
     dr(`sub templates/control.yaml > ${ledgerDir}/control.yaml (only if missing)`);
     dr(`sub templates/state.json > ${ledgerDir}/state.json (only if missing)`);
 
@@ -762,6 +789,18 @@ async function main() {
     );
     say(`arbiter profile: ${arbiterName} (binding decision, premium model)`);
 
+    // Reflector profile (consolidation agent, shadow mode by default)
+    const reflectorName = "reflector";
+    await installProfile(
+      hermesBin, hermesRoot,
+      reflectorName,
+      "config.worker.yaml",
+      "SOUL.reflector.md",
+      vars,
+      false,
+    );
+    say(`reflector profile: ${reflectorName} (shadow mode, active only after containment verified)`);
+
     // ── Gate script ──
     mkdirSync(HERMES_SCRIPTS, { recursive: true });
     const gateContent = await subFile(
@@ -770,6 +809,21 @@ async function main() {
     );
     Bun.write(join(HERMES_SCRIPTS, `${config.hermes.tick_name}-gate.sh`), gateContent);
     say(`gate script installed: ${HERMES_SCRIPTS}/${config.hermes.tick_name}-gate.sh`);
+
+    // ── v0.5 scripts ──
+    const v05scripts = [
+      "blame-propagation.py", "provenance-track.py", "feature-flags.py",
+      "containment-engine.py", "reflector-dispatch.sh",
+      "analogy-channel.py", "dream-channel.py", "whisper-channel.py",
+      "calibration-channel.py", "tick-journal.py",
+    ];
+    for (const script of v05scripts) {
+      const src = join(TEMPLATES_DIR, "scripts", script);
+      if (existsSync(src)) {
+        Bun.write(join(HERMES_SCRIPTS, script), await Bun.file(src).text());
+      }
+    }
+    say("v0.5 scripts installed: blame, provenance, feature-flags, containment, reflector, channels, journal");
 
     // ── LiteLLM proxy config ──
     const litellmContent = await subFile(join(TEMPLATES_DIR, "litellm-config.yaml"), vars);
@@ -784,6 +838,12 @@ async function main() {
     mkdirSync(join(ledgerDir, "runs"), { recursive: true });
     mkdirSync(join(ledgerDir, "reports"), { recursive: true });
     mkdirSync(join(ledgerDir, "ideas"), { recursive: true });
+    mkdirSync(join(ledgerDir, "beliefs"), { recursive: true });
+    mkdirSync(join(ledgerDir, "provenance"), { recursive: true });
+    mkdirSync(join(ledgerDir, "reflector"), { recursive: true });
+    mkdirSync(join(ledgerDir, "whispers"), { recursive: true });
+    mkdirSync(join(ledgerDir, "analogies"), { recursive: true });
+    mkdirSync(join(ledgerDir, "dreams"), { recursive: true });
     if (!existsSync(join(ledgerDir, "events.jsonl"))) {
       Bun.write(join(ledgerDir, "events.jsonl"), "");
       say(`events log: ${ledgerDir}/events.jsonl`);
@@ -913,6 +973,9 @@ async function main() {
     const registryProfiles = [
       config.hermes.profile_orchestrator,
       ...Array.from({ length: config.hermes.worker_count }, (_, i) => `${config.hermes.profile_worker_prefix}-${i + 1}`),
+      challengerName,
+      arbiterName,
+      "reflector",
     ];
     await updateRegistry(config, repoDir, args.adapter || "default", registryProfiles, false);
 

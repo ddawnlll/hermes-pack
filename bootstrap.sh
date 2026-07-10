@@ -53,6 +53,13 @@ DF_ARBITER_CHAIN_2="ollama/llama3"
 DF_PROFILE_CHALLENGER="challenger"
 DF_PROFILE_ARBITER="arbiter"
 
+# Reflector defaults
+DF_REFLECTOR_MODEL="openrouter/anthropic/claude-sonnet-4-20250514"
+DF_REFLECTOR_CHAIN_0="claude-sonnet-4-20250514"
+DF_REFLECTOR_CHAIN_1="deepseek/deepseek-chat"
+DF_REFLECTOR_CHAIN_2="ollama/llama3"
+DF_PROFILE_REFLECTOR="reflector"
+
 # ----------------------------- helpers --------------------------------------
 say()  { printf '\033[1;32m[hermes-setup]\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[hermes-setup] WARN:\033[0m %s\n' "$*"; }
@@ -171,6 +178,17 @@ load_adapter() {
   compute_chain_vars "CHALLENGER"
   compute_chain_vars "ARBITER"
 
+  # ── Reflector extraction ─────────────────────────────────────────────
+  REFLECTOR_MODEL=$(extract_str "$file" "reflector_model" "$DF_REFLECTOR_MODEL")
+  local ref_prov
+  ref_prov=$(extract_str "$file" "reflector" "")
+  if [ -n "$ref_prov" ]; then
+    REFLECTOR_PROVIDER="$ref_prov"
+  else
+    REFLECTOR_PROVIDER="${REFLECTOR_MODEL%%/*}"
+  fi
+  PROFILE_REFLECTOR=$(extract_str "$file" "profile_reflector" "$DF_PROFILE_REFLECTOR")
+
   local allowed
   allowed=$(extract_yaml_list "$file" "allowed")
   ALLOWED_YAML="${allowed:-$DF_ALLOWED}"
@@ -266,6 +284,12 @@ else
   ARBITER_CHAIN_0="$DF_ARBITER_CHAIN_0"
   ARBITER_CHAIN_1="$DF_ARBITER_CHAIN_1"
   ARBITER_CHAIN_2="$DF_ARBITER_CHAIN_2"
+  REFLECTOR_MODEL="$DF_REFLECTOR_MODEL"
+  REFLECTOR_PROVIDER="${REFLECTOR_MODEL%%/*}"
+  PROFILE_REFLECTOR="$DF_PROFILE_REFLECTOR"
+  REFLECTOR_CHAIN_0="$DF_REFLECTOR_CHAIN_0"
+  REFLECTOR_CHAIN_1="$DF_REFLECTOR_CHAIN_1"
+  REFLECTOR_CHAIN_2="$DF_REFLECTOR_CHAIN_2"
 fi
 
 say "project: $PROJECT_NAME"
@@ -307,6 +331,12 @@ sub() {
       -e "s|__HERMES_ARBITER_CHAIN_0__|${ARBITER_CHAIN_0:-claude-sonnet-4-20250514}|g" \
       -e "s|__HERMES_ARBITER_CHAIN_1__|${ARBITER_CHAIN_1:-deepseek/deepseek-chat}|g" \
       -e "s|__HERMES_ARBITER_CHAIN_2__|${ARBITER_CHAIN_2:-ollama/llama3}|g" \
+      -e "s|__HERMES_REFLECTOR_PROVIDER__|${REFLECTOR_PROVIDER:-openrouter}|g" \
+      -e "s|__HERMES_REFLECTOR_MODEL__|${REFLECTOR_MODEL:-anthropic/claude-sonnet-4-20250514}|g" \
+      -e "s|__HERMES_REFLECTOR_CHAIN_0__|${REFLECTOR_CHAIN_0:-claude-sonnet-4-20250514}|g" \
+      -e "s|__HERMES_REFLECTOR_CHAIN_1__|${REFLECTOR_CHAIN_1:-deepseek/deepseek-chat}|g" \
+      -e "s|__HERMES_REFLECTOR_CHAIN_2__|${REFLECTOR_CHAIN_2:-ollama/llama3}|g" \
+      -e "s|__HERMES_PROFILE_REFLECTOR__|${PROFILE_REFLECTOR:-reflector}|g" \
       "$1")
   # Multi-line YAML lists: use awk for the two remaining vars
   echo "$tmp" | awk -v a="$ALLOWED_YAML" -v f="$FORBIDDEN_YAML" '
@@ -409,6 +439,8 @@ else
   done
   install_profile "$PROFILE_CHALLENGER" "templates/config.challenger.yaml" "templates/SOUL.challenger.md"
   install_profile "$PROFILE_ARBITER" "templates/config.arbiter.yaml" "templates/SOUL.arbiter.md"
+  install_profile "$PROFILE_REFLECTOR" "templates/config.worker.yaml" "templates/SOUL.reflector.md"
+  say "reflector profile: $PROFILE_REFLECTOR (shadow mode by default, active only after containment verified)"
 
   # ----------------------------- gate script ----------------------------------
   if $DRY_RUN; then
@@ -430,12 +462,23 @@ else
     cp "$HERE/templates/scripts/prereg-lock.py" "$HERMES_SCRIPTS/prereg-lock.py"
     chmod +x "$HERMES_SCRIPTS/prereg-lock.py"
     say "gate script installed: $HERMES_SCRIPTS/prereg-lock.py"
+    # ── v0.5 scripts ──────────────────────────────────────────
+    for script in blame-propagation.py provenance-track.py feature-flags.py \
+                  containment-engine.py reflector-dispatch.sh \
+                  analogy-channel.py dream-channel.py whisper-channel.py \
+                  calibration-channel.py tick-journal.py; do
+      cp "$HERE/templates/scripts/$script" "$HERMES_SCRIPTS/$script"
+      chmod +x "$HERMES_SCRIPTS/$script" 2>/dev/null || true
+    done
+    say "v0.5 scripts: blame, provenance, feature-flags, containment, reflector, channels, journal"
   fi
 
   # ----------------------------- repo ledger ----------------------------------
   LEDGER="$REPO_DIR/$LEDGER_DIR"
   if $DRY_RUN; then
     dry "mkdir -p $LEDGER/{hypotheses,runs,reports,challenger,arbiter,locks}"
+    dry "mkdir -p $LEDGER/{beliefs,provenance,reflector}"
+    dry "mkdir -p $LEDGER/{whispers,analogies,dreams}"
     dry "sub templates/control.yaml > $LEDGER/control.yaml (only if missing)"
     dry "sub templates/state.json > $LEDGER/state.json (only if missing)"
     if [ -n "$ADAPTER" ]; then
@@ -448,6 +491,8 @@ else
     fi
   else
     mkdir -p "$LEDGER"/{hypotheses,runs,reports,challenger,arbiter,locks}
+    mkdir -p "$LEDGER"/{beliefs,provenance,reflector}
+    mkdir -p "$LEDGER"/{whispers,analogies,dreams}
     if [ ! -f "$LEDGER/control.yaml" ]; then
       sub "$HERE/templates/control.yaml" > "$LEDGER/control.yaml"
     fi
@@ -537,7 +582,7 @@ else
     ledger: \"$LEDGER_DIR\"
     board: \"$BOARD_NAME\"
     tick: \"$TICK_NAME\"
-    profiles: [$PROFILE_ORCH$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", ${PROFILE_WORKER_PREFIX}-${i}"; done), $PROFILE_CHALLENGER, $PROFILE_ARBITER]
+    profiles: [$PROFILE_ORCH$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", ${PROFILE_WORKER_PREFIX}-${i}"; done), $PROFILE_CHALLENGER, $PROFILE_ARBITER, $PROFILE_REFLECTOR]
     status: \"active\"
     goal_status: \"none\"
     registered_at: \"$REGISTRY_TIMESTAMP\"
@@ -565,7 +610,7 @@ print(json.dumps({
     'ledger': '$LEDGER_DIR',
     'board': '$BOARD_NAME',
     'tick': '$TICK_NAME',
-    'profiles': ['$PROFILE_ORCH'$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", '${PROFILE_WORKER_PREFIX}-${i}'"; done), '$PROFILE_CHALLENGER', '$PROFILE_ARBITER'],
+    'profiles': ['$PROFILE_ORCH'$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", '${PROFILE_WORKER_PREFIX}-${i}'"; done), '$PROFILE_CHALLENGER', '$PROFILE_ARBITER', '$PROFILE_REFLECTOR'],
     'status': 'active',
     'goal_status': 'none',
     'registered_at': '$REGISTRY_TIMESTAMP',
@@ -594,7 +639,7 @@ registry = {
         'ledger': '$LEDGER_DIR',
         'board': '$BOARD_NAME',
         'tick': '$TICK_NAME',
-        'profiles': ['$PROFILE_ORCH'$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", '${PROFILE_WORKER_PREFIX}-${i}'"; done), '$PROFILE_CHALLENGER', '$PROFILE_ARBITER'],
+        'profiles': ['$PROFILE_ORCH'$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", '${PROFILE_WORKER_PREFIX}-${i}'"; done), '$PROFILE_CHALLENGER', '$PROFILE_ARBITER', '$PROFILE_REFLECTOR'],
         'status': 'active',
         'goal_status': 'none',
         'registered_at': '$REGISTRY_TIMESTAMP',
@@ -618,7 +663,7 @@ if [ "$SETUP_MODE" = "custom" ]; then
   say "setup:      custom (adapter: ${ADAPTER:-default})"
 else
   say "mode:       orchestrator"
-  say "profiles:   $PROFILE_ORCH, ${PROFILE_WORKER_PREFIX}-1..${WORKER_COUNT}, $PROFILE_CHALLENGER, $PROFILE_ARBITER"
+  say "profiles:   $PROFILE_ORCH, ${PROFILE_WORKER_PREFIX}-1..${WORKER_COUNT}, $PROFILE_CHALLENGER, $PROFILE_ARBITER, $PROFILE_REFLECTOR"
   say "tick:       $TICK_NAME ($TICK_SCHEDULE)"
 fi
 say "board:      $BOARD_NAME"
