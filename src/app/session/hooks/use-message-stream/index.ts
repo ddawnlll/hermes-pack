@@ -30,6 +30,10 @@ import type { ClientSessionState } from '../../../types'
 import { useGatewayEventHandler } from './gateway-event'
 import { completionErrorText, delegateTaskPayloads, STREAM_DELTA_FLUSH_MS } from './utils'
 
+// Background (non-active) session deltas flush at slower cadence
+// so active session re-render never competes with off-screen updates.
+const BACKGROUND_FLUSH_MS = 700
+
 interface MessageStreamOptions {
   activeSessionIdRef: MutableRefObject<string | null>
   hydrateFromStoredSession: (
@@ -219,9 +223,24 @@ export function useMessageStream({
       const queued = queuedDeltasRef.current.get(sessionId) ?? { assistant: '', reasoning: '' }
       queued[key] += delta
       queuedDeltasRef.current.set(sessionId, queued)
-      scheduleDeltaFlush()
+
+      // Foreground: interactive cadence. Background: batch longer so
+      // the active session's markdown re-parse never contends.
+      if (sessionId === activeSessionIdRef.current) {
+        scheduleDeltaFlush()
+      } else {
+        if (flushHandleRef.current !== null) {
+          return
+        }
+        lastFlushAtRef.current = performance.now()
+        flushHandleRef.current = window.setTimeout(() => {
+          flushHandleRef.current = null
+          lastFlushAtRef.current = performance.now()
+          flushQueuedDeltas()
+        }, BACKGROUND_FLUSH_MS)
+      }
     },
-    [scheduleDeltaFlush]
+    [activeSessionIdRef, scheduleDeltaFlush, flushQueuedDeltas]
   )
 
   useEffect(

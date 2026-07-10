@@ -8,7 +8,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useRef,
+  useMemo, useRef,
   useState
 } from 'react'
 import { useStickToBottom } from 'use-stick-to-bottom'
@@ -103,7 +103,7 @@ const ThreadMessageListInner: FC<ThreadMessageListProps> = ({
   )
 
   const { t } = useI18n()
-  const groups = buildGroups(messageSignature)
+  const groups = useMemo(() => buildGroups(messageSignature), [messageSignature])
   const renderEmpty = groups.length === 0 && Boolean(emptyPlaceholder)
 
   // use-stick-to-bottom owns scrollTop (single writer): follow while locked,
@@ -300,7 +300,7 @@ const ThreadMessageListInner: FC<ThreadMessageListProps> = ({
             )}
             {visibleGroups.map(group => (
               <div
-                className="flex min-w-0 flex-col gap-(--conversation-turn-gap) pb-(--conversation-turn-gap)"
+                className="flex min-w-0 flex-col gap-(--conversation-turn-gap) pb-(--conversation-turn-gap) [content-visibility:auto]"
                 key={group.id}
               >
                 <MessageRenderBoundary resetKey={messageSignature}>
