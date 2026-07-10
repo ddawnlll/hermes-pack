@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/ddawnlll/hephaestus/schema/beliefs.schema.json",
   "title": "Hephaestus Beliefs Workspace Schema",
-  "description": "Schema for beliefs.yaml — the capacity-limited workspace of consolidated beliefs. Only the Reflector writes beliefs. Every belief must have a falsifiable kill_criterion.",
+  "description": "Schema for beliefs.yaml — the capacity-limited active workspace of consolidated beliefs. Active capacity: exactly 12 beliefs. Historical evicted/refuted beliefs live in a separate append-only audit ledger. Only the Reflector writes beliefs. Every belief must have a falsifiable kill_criterion.",
   "type": "object",
   "properties": {
     "schema_version": {
@@ -13,8 +13,8 @@
     },
     "beliefs": {
       "type": "array",
-      "description": "List of consolidated beliefs. Capacity-limited (max 128 entries).",
-      "maxItems": 128,
+      "description": "Active broadcast workspace. Exactly 12 beliefs maximum. Beliefs with status 'evicted' or 'refuted' must be moved to the historical_beliefs array and do not consume this capacity.",
+      "maxItems": 12,
       "items": {
         "type": "object",
         "properties": {
@@ -38,7 +38,7 @@
           },
           "status": {
             "type": "string",
-            "description": "Current belief lifecycle status.",
+            "description": "Current belief lifecycle status. Only 'active' beliefs count toward the 12-item capacity.",
             "enum": ["active", "suspect", "refuted", "evicted"],
             "default": "active"
           },
@@ -55,13 +55,25 @@
           },
           "ttl": {
             "type": "integer",
-            "description": "Time-to-live in ticks. When TTL expires, belief is eligible for eviction review.",
+            "description": "Time-to-live in ticks. When TTL expires, suspect enforcement ends automatically unless Reflector re-justifies with new evidence.",
             "minimum": 1,
             "default": 24
           },
+          "suspect_age": {
+            "type": "integer",
+            "description": "Ticks spent in suspect status. When suspect_age >= TTL, enforcement expires.",
+            "minimum": 0,
+            "default": 0
+          },
           "cooldown_remaining": {
             "type": "integer",
-            "description": "Ticks remaining in cooldown after a frame shift or ratchet direction change. Zero = not in cooldown.",
+            "description": "Ticks remaining in cooldown after a frame shift or ratchet direction change. Zero = not in cooldown. Survives process restart via durable state.",
+            "minimum": 0,
+            "default": 0
+          },
+          "frame_shift_count": {
+            "type": "integer",
+            "description": "Number of direction changes within the oscillation window. Used for anti-oscillation hysteresis.",
             "minimum": 0,
             "default": 0
           },
@@ -75,35 +87,23 @@
             "description": "ISO 8601 last updated timestamp.",
             "format": "date-time"
           },
+          "blamed_by": {
+            "type": "array",
+            "description": "Hypothesis IDs whose FAIL has directly propagated blame to this belief. Appended, never duplicated (idempotent).",
+            "items": { "type": "string" },
+            "default": []
+          },
           "provenance": {
             "type": "array",
             "description": "Provenance trail — records of what evidence/channels created or modified this belief.",
             "items": {
               "type": "object",
               "properties": {
-                "source": {
-                  "type": "string",
-                  "description": "Source of the provenance record: channel name (reflector, analogy, replay, dream, whisper, calibration, experiment) or external reference."
-                },
-                "hypothesis_id": {
-                  "type": "string",
-                  "description": "Hypothesis ID that generated the evidence, if applicable.",
-                  "default": ""
-                },
-                "run_id": {
-                  "type": "string",
-                  "description": "Run ID that produced the evidence, if applicable.",
-                  "default": ""
-                },
-                "timestamp": {
-                  "type": "string",
-                  "description": "ISO 8601 timestamp of the evidence.",
-                  "format": "date-time"
-                },
-                "summary": {
-                  "type": "string",
-                  "description": "Brief description of what evidence contributed."
-                }
+                "source": { "type": "string" },
+                "hypothesis_id": { "type": "string", "default": "" },
+                "run_id": { "type": "string", "default": "" },
+                "timestamp": { "type": "string", "format": "date-time" },
+                "summary": { "type": "string" }
               },
               "required": ["source", "timestamp"],
               "additionalProperties": false
@@ -116,20 +116,28 @@
             "items": {
               "type": "object",
               "properties": {
-                "record_id": {
-                  "type": "string",
-                  "description": "Evidence record ID from the ledger."
-                },
-                "type": {
-                  "type": "string",
-                  "description": "Evidence type: source, test_output, diff, metric, or ledger_record."
-                },
-                "summary": {
-                  "type": "string",
-                  "description": "Brief description of what this evidence shows."
-                }
+                "record_id": { "type": "string" },
+                "type": { "type": "string" },
+                "summary": { "type": "string" }
               },
               "required": ["record_id", "type"],
+              "additionalProperties": false
+            },
+            "default": []
+          },
+          "ratchet_audit": {
+            "type": "array",
+            "description": "Audit log of ratchet transitions. Each entry records the direction, notch, verdict_window, and timestamp. Survives restart.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "timestamp": { "type": "string", "format": "date-time" },
+                "direction": { "type": "string", "enum": ["tighten", "loosen", "reverse"] },
+                "notch": { "type": "integer" },
+                "verdict_window": { "type": "integer", "description": "Index of the R-verdict window in which this change occurred." },
+                "evidence_summary": { "type": "string" }
+              },
+              "required": ["timestamp", "direction"],
               "additionalProperties": false
             },
             "default": []
@@ -142,18 +150,17 @@
     },
     "capacity": {
       "type": "object",
-      "description": "Workspace capacity tracking.",
+      "description": "Workspace capacity tracking. The active workspace is capped at 12 beliefs. Historical evicted/refuted beliefs go to historical_beliefs (unbounded).",
       "properties": {
-        "max_beliefs": {
+        "max_active_beliefs": {
           "type": "integer",
-          "description": "Maximum number of beliefs allowed.",
-          "minimum": 8,
-          "maximum": 1024,
-          "default": 128
+          "description": "Exactly 12 active beliefs maximum.",
+          "minimum": 12,
+          "maximum": 12,
+          "default": 12
         },
         "eviction_strategy": {
           "type": "string",
-          "description": "Strategy for eviction when capacity is reached.",
           "enum": ["lowest_confidence", "oldest_active", "highest_stagnation", "lru"],
           "default": "lowest_confidence"
         }
@@ -161,9 +168,32 @@
       "additionalProperties": false,
       "default": {}
     },
+    "historical_beliefs": {
+      "type": "array",
+      "description": "Append-only ledger of evicted/refuted beliefs. Does NOT count toward the 12-item active workspace capacity.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "statement": { "type": "string" },
+          "status": { "type": "string", "enum": ["evicted", "refuted"] },
+          "eviction_reason": {
+            "type": "object",
+            "properties": {
+              "timestamp": { "type": "string", "format": "date-time" },
+              "evidence_refs": { "type": "array", "items": { "type": "string" } }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "statement", "status"],
+        "additionalProperties": false
+      },
+      "default": []
+    },
     "narrative": {
       "type": "string",
-      "description": "One-page bounded causal summary. Rewritten (never append-only) by the Reflector each consolidation cycle. Ledger remains the source of truth.",
+      "description": "One-page bounded causal summary. Rewritten (never append-only) by the Reflector each consolidation cycle. Ledger remains the source of truth. Must cite ledger/hypothesis/belief IDs.",
       "default": ""
     },
     "updated_at": {
