@@ -35,6 +35,35 @@ if [ "$reflector_mode" = "disabled" ]; then
   exit 1
 fi
 
+# Active mode requires valid readiness artifact
+if [ "$reflector_mode" = "active" ]; then
+  READINESS_FILE="$REPO/$LEDGER_DIR/reflector/readiness.json"
+  if [ ! -f "$READINESS_FILE" ]; then
+    echo '{"wakeReflector": false, "reason": "reflector=active but no readiness artifact. Run readiness-check.py first."}'
+    exit 1
+  fi
+  python3 -c "
+import json
+with open('$READINESS_FILE') as f:
+    d = json.load(f)
+if not d.get('all_checks_pass'):
+    print('checks_failed')
+    exit(1)
+ts = d.get('timestamp', '')
+if ts:
+    from datetime import datetime
+    t = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+    age = (datetime.utcnow() - t.replace(tzinfo=None)).total_seconds()
+    if age > 86400:
+        print('expired')
+        exit(1)
+print('valid')
+" 2>&1 | grep -q valid || {
+    echo '{"wakeReflector": false, "reason": "reflector=active but readiness expired or failed. Re-run readiness-check.py."}'
+    exit 1
+  }
+fi
+
 # ── 2) Check state phase ───────────────────────────────────────────────
 phase=$(python3 -c "
 import json

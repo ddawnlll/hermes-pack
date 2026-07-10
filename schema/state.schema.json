@@ -25,7 +25,7 @@
     "phase": {
       "type": "string",
       "description": "Current phase within the tick for crash recovery.",
-      "enum": ["idle", "dispatch", "wait_workers", "verify", "reflect", "consolidate", "complete"],
+      "enum": ["idle", "running", "dispatch", "wait_workers", "verify", "reflect", "consolidate", "complete"],
       "default": "idle"
     },
     "worker_status": {

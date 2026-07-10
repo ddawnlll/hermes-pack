@@ -3,48 +3,48 @@
 channel-budget.py — Centralized channel budget enforcement (#70, #65-#68)
 
 Atomic, daily-resetting, idempotent budget accounting.
-
-Commands:
-  can-run <state> <channel> [estimated_amount]
-  spend <state> <journal_dir> <channel> <amount> <operation_key>
-  status <state>
-
-Daily reset: compares UTC date stored in state.channel_spend_date.
-Atomic write: write temp file + os.rename.
-Operation key: dedup via tick-journal already-applied.
 """
 
-import json, os, sys, uuid
-from datetime import datetime, date
+import json, math, os, subprocess, sys, time, uuid
+from datetime import datetime
 
-FLAG_MAP = {
-    "reflector": "reflector", "analogy": "analogy_channel",
-    "dream": "dream_channel", "whisper": "whisper_channel",
-    "calibration": "affect_modulation",
-}
-DEFAULT_BUDGETS = {"reflector": 0.5, "analogy": 0.25, "dream": 0.15,
-                   "whisper": 0.1, "calibration": 0.2}
+FLAG_MAP = {"reflector":"reflector","analogy":"analogy_channel","dream":"dream_channel",
+            "whisper":"whisper_channel","calibration":"affect_modulation"}
+DEFAULT_BUDGETS = {"reflector":0.5,"analogy":0.25,"dream":0.15,"whisper":0.1,"calibration":0.2}
 
-def _lock_path(state_file):
-    return state_file + ".budget.lock"
+def _lk(state_file): return state_file + ".budget.lock"
 
-def _is_disabled(state, channel):
-    flag = FLAG_MAP.get(channel)
-    if not flag: return True, f"Unknown channel '{channel}'"
-    val = state.get("features", {}).get(flag)
-    if channel == "reflector":
-        if val == "disabled": return True, "reflector=disabled"
-        return False, ""
-    if val is False or val == "disabled":
-        return True, f"{flag}={val}"
-    return False, ""
+def _acq(state_file, to=5):
+    lf = _lk(state_file); dl = datetime.utcnow().timestamp() + to
+    while True:
+        try:
+            fd = os.open(lf, os.O_CREAT|os.O_EXCL|os.O_WRONLY)
+            os.write(fd, str(os.getpid()).encode()); os.close(fd); return True
+        except FileExistsError:
+            if datetime.utcnow().timestamp() > dl:
+                try:
+                    if datetime.utcnow().timestamp() - os.path.getmtime(lf) > 10: os.unlink(lf); continue
+                except: pass
+                return False
+            time.sleep(0.1)
+
+def _rel(state_file):
+    try: os.unlink(_lk(state_file))
+    except: pass
+
+def _is_disabled(state, ch):
+    flag = FLAG_MAP.get(ch)
+    if not flag: return True, f"Unknown {ch}"
+    v = state.get("features", {}).get(flag)
+    if ch == "reflector":
+        return (True, "reflector=disabled") if v == "disabled" else (False, "")
+    return (True, f"{flag}={v}") if (v is False or v == "disabled") else (False, "")
 
 def _daily_reset(state):
-    today = str(date.today())
+    today = datetime.utcnow().strftime("%Y-%m-%d")
     if state.get("channel_spend_date") != today:
         state["channel_spend_date"] = today
-        ch = state.get("channel_spend_today", {})
-        for k in ch: ch[k] = 0
+        for k in state.get("channel_spend_today", {}): state["channel_spend_today"][k] = 0
     return state
 
 def _atomic_write(path, data):
@@ -52,125 +52,92 @@ def _atomic_write(path, data):
     with open(tmp, "w") as f: json.dump(data, f, indent=2)
     os.rename(tmp, path)
 
-def can_run(state_file, channel, estimated_amount=0):
-    if not os.path.exists(state_file):
-        return {"allowed": False, "reason": "state_file not found"}
+def can_run(state_file, channel, estimated=0):
+    if not os.path.exists(state_file): return {"allowed": False, "reason": "state_file not found"}
     with open(state_file) as f: state = json.load(f)
-    disabled, reason = _is_disabled(state, channel)
-    if disabled:
-        return {"allowed": False, "reason": reason}
+    d, r = _is_disabled(state, channel)
+    if d: return {"allowed": False, "reason": r}
     state = _daily_reset(state)
-    budgets = state.get("channel_budgets", {})
-    daily = budgets.get(channel, DEFAULT_BUDGETS.get(channel, 0))
-    spend = state.get("channel_spend_today", {}).get(channel, 0)
-    remaining = round(daily - spend, 4)
-    if remaining <= 0:
-        return {"allowed": False, "reason": f"Budget exhausted: {spend}/{daily}"}
-    if estimated_amount > 0 and estimated_amount > remaining:
-        return {"allowed": False, "reason": f"Estimated ${estimated_amount} exceeds ${remaining} remaining"}
-    return {"allowed": True, "budget": daily, "spent": spend, "remaining": remaining}
+    daily = state.get("channel_budgets", {}).get(channel, DEFAULT_BUDGETS.get(channel, 0))
+    spent = state.get("channel_spend_today", {}).get(channel, 0)
+    remaining = round(daily - spent, 4)
+    if remaining <= 0: return {"allowed": False, "reason": f"Exhausted {spent}/{daily}"}
+    if estimated > remaining: return {"allowed": False, "reason": f"Est ${estimated} > ${remaining}"}
+    return {"allowed": True, "budget": daily, "spent": spent, "remaining": remaining}
 
 def spend(state_file, journal_dir, channel, amount, operation_key):
-    if amount is None:
-        return {"error": "amount is required"}
-    try:
-        amount_f = float(amount)
-    except (ValueError, TypeError):
-        return {"error": f"Invalid amount '{amount}'"}
-    if amount_f < 0:
-        return {"error": f"Negative amount: {amount_f}"}
-    if not math.isfinite(amount_f):
-        return {"error": f"Non-finite amount: {amount_f}"}
+    try: amt = float(amount)
+    except: return {"error": f"Invalid amount '{amount}'"}
+    if amt < 0 or not math.isfinite(amt): return {"error": f"Bad amount: {amount}"}
 
-    # Dedup via journal
-    if journal_dir:
-        import subprocess
-        tj = os.path.join(os.path.dirname(__file__), "tick-journal.py")
-        if os.path.exists(tj):
-            proc = subprocess.run([sys.executable, tj, "already-applied", journal_dir, operation_key],
-                                  capture_output=True, text=True, timeout=10)
-            if proc.stdout.strip():
-                try:
-                    ja = json.loads(proc.stdout)
-                    if ja.get("applied"):
-                        return {"status": "already_applied", "operation_key": operation_key, "amount": amount_f}
-                except json.JSONDecodeError: pass
-
-    # Load state
+    # Load state + dedup check
     with open(state_file) as f: state = json.load(f)
     state = _daily_reset(state)
+    spent_keys = state.get("spent_operation_keys", {})
+    if operation_key in spent_keys:
+        return {"status": "already_applied", "operation_key": operation_key, "amount": amt}
 
-    # Feature flag recheck
-    disabled, reason = _is_disabled(state, channel)
-    if disabled:
-        return {"error": f"Feature disabled: {reason}"}
+    # Locked transaction
+    if not _acq(state_file): return {"error": "Could not acquire budget lock"}
+    try:
+        with open(state_file) as f: state = json.load(f)
+        state = _daily_reset(state)
+        d, r = _is_disabled(state, channel)
+        if d: return {"error": f"Feature disabled: {r}"}
+        daily = state.get("channel_budgets", {}).get(channel, DEFAULT_BUDGETS.get(channel, 0))
+        st = state.get("channel_spend_today", {})
+        cur = float(st.get(channel, 0))
+        new_t = cur + amt
+        if new_t > daily: return {"error": f"${amt} > ${round(daily-cur,4)} remaining"}
+        # Atomic write
+        spent_keys = state.get("spent_operation_keys", {})
+        spent_keys[operation_key] = round(new_t, 4)
+        st[channel] = round(new_t, 4)
+        state["spent_operation_keys"] = spent_keys
+        state["channel_spend_today"] = st
+        _atomic_write(state_file, state)
+    finally:
+        _rel(state_file)
 
-    # Budget check inside same transaction
-    budgets = state.get("channel_budgets", {})
-    daily = budgets.get(channel, DEFAULT_BUDGETS.get(channel, 0))
-    spend_today = state.get("channel_spend_today", {})
-    current = float(spend_today.get(channel, 0))
-    new_total = current + amount_f
-    if new_total > daily:
-        return {"error": f"${amount_f} exceeds remaining ${round(daily - current, 4)}"}
-    if new_total > daily * 2:  # Safety valve
-        return {"error": f"New total ${new_total} > 2x budget ${daily} — aborting"}
-
-    # Atomic update
-    spend_today[channel] = round(new_total, 4)
-    state["channel_spend_today"] = spend_today
-    _atomic_write(state_file, state)
-
-    # Commit operation key to journal
+    # Journal commit (after unlock — acceptable because state is already committed)
     if journal_dir:
-        import subprocess
         tj = os.path.join(os.path.dirname(__file__), "tick-journal.py")
         if os.path.exists(tj):
             subprocess.run([sys.executable, tj, "start-phase", journal_dir, f"budget:{channel}"],
                            capture_output=True, timeout=10)
-            subprocess.run([sys.executable, tj, "complete-phase", journal_dir,
-                           f"budget:{channel}", operation_key],
+            subprocess.run([sys.executable, tj, "complete-phase", journal_dir, f"budget:{channel}", operation_key],
                            capture_output=True, timeout=10)
 
-    return {"status": "recorded", "operation_key": operation_key, "amount": amount_f,
-            "new_total": round(new_total, 4), "spent_budget": daily,
-            "remaining": round(daily - new_total, 4)}
+    return {"status": "recorded", "operation_key": operation_key, "amount": amt,
+            "new_total": round(new_t, 4), "spent_budget": daily, "remaining": round(daily - new_t, 4)}
 
 def cmd_status(state_file):
     with open(state_file) as f: state = json.load(f)
     state = _daily_reset(state)
     budgets = state.get("channel_budgets", {})
-    spend_today = state.get("channel_spend_today", {})
-    features = state.get("features", {})
-    channels = {}
+    st = state.get("channel_spend_today", {})
+    feats = state.get("features", {})
+    chs = {}
     for ch, flag in FLAG_MAP.items():
-        disabled, _ = _is_disabled(state, ch)
+        d, _ = _is_disabled(state, ch)
         daily = budgets.get(ch, DEFAULT_BUDGETS.get(ch, 0))
-        spent = spend_today.get(ch, 0)
-        channels[ch] = {"feature_flag": flag, "flag_value": features.get(flag),
-                        "enabled": not disabled, "daily_budget": daily,
-                        "spent_today": spent, "remaining_today": round(daily - spent, 4)}
-    return {"channels": channels, "spend_date": state.get("channel_spend_date"), "as_of": str(date.today())}
-
-import math
+        sp = st.get(ch, 0)
+        chs[ch] = {"flag": flag, "val": feats.get(flag), "enabled": not d,
+                    "daily": daily, "spent": sp, "remaining": round(daily - sp, 4)}
+    return {"channels": chs, "spend_date": state.get("channel_spend_date"),
+            "as_of": datetime.utcnow().strftime("%Y-%m-%d")}
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print(__doc__, file=sys.stderr); sys.exit(1)
+    if len(sys.argv) < 3: print(__doc__, file=sys.stderr); sys.exit(1)
     cmd = sys.argv[1]
     if cmd == "can-run":
-        sf = sys.argv[2]; ch = sys.argv[3] if len(sys.argv) > 3 else ""
+        sf, ch = sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else ""
         est = float(sys.argv[4]) if len(sys.argv) > 4 else 0
-        result = can_run(sf, ch, est)
-        print(json.dumps(result, indent=2))
-        sys.exit(0 if result.get("allowed") else 1)
+        r = can_run(sf, ch, est)
+        print(json.dumps(r, indent=2)); sys.exit(0 if r.get("allowed") else 1)
     elif cmd == "spend":
-        if len(sys.argv) < 7:
-            print("Usage: channel-budget.py spend <state> <journal_dir> <channel> <amount> <op_key>")
-            sys.exit(1)
-        result = spend(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
-        print(json.dumps(result, indent=2))
-        sys.exit(1 if result.get("error") else 0)
+        if len(sys.argv) < 7: print("Usage: ... spend <state> <journal> <ch> <amt> <opkey>"); sys.exit(1)
+        r = spend(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+        print(json.dumps(r, indent=2)); sys.exit(1 if r.get("error") else 0)
     elif cmd == "status":
-        result = cmd_status(sys.argv[2])
-        print(json.dumps(result, indent=2)); sys.exit(0)
+        r = cmd_status(sys.argv[2]); print(json.dumps(r, indent=2)); sys.exit(0)

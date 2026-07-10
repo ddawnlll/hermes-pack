@@ -54,10 +54,10 @@ DF_PROFILE_CHALLENGER="challenger"
 DF_PROFILE_ARBITER="arbiter"
 
 # Reflector defaults
-DF_REFLECTOR_MODEL="openrouter/anthropic/claude-sonnet-4-20250514"
-DF_REFLECTOR_CHAIN_0="claude-sonnet-4-20250514"
-DF_REFLECTOR_CHAIN_1="deepseek/deepseek-chat"
-DF_REFLECTOR_CHAIN_2="ollama/llama3"
+DF_REFLECTOR_MODEL="openrouter/deepseek/deepseek-chat"
+DF_REFLECTOR_CHAIN_0="deepseek/deepseek-chat"
+DF_REFLECTOR_CHAIN_1="ollama/llama3"
+DF_REFLECTOR_CHAIN_2=""
 DF_PROFILE_REFLECTOR="reflector"
 
 # ----------------------------- helpers --------------------------------------
@@ -332,10 +332,10 @@ sub() {
       -e "s|__HERMES_ARBITER_CHAIN_1__|${ARBITER_CHAIN_1:-deepseek/deepseek-chat}|g" \
       -e "s|__HERMES_ARBITER_CHAIN_2__|${ARBITER_CHAIN_2:-ollama/llama3}|g" \
       -e "s|__HERMES_REFLECTOR_PROVIDER__|${REFLECTOR_PROVIDER:-openrouter}|g" \
-      -e "s|__HERMES_REFLECTOR_MODEL__|${REFLECTOR_MODEL:-anthropic/claude-sonnet-4-20250514}|g" \
-      -e "s|__HERMES_REFLECTOR_CHAIN_0__|${REFLECTOR_CHAIN_0:-claude-sonnet-4-20250514}|g" \
-      -e "s|__HERMES_REFLECTOR_CHAIN_1__|${REFLECTOR_CHAIN_1:-deepseek/deepseek-chat}|g" \
-      -e "s|__HERMES_REFLECTOR_CHAIN_2__|${REFLECTOR_CHAIN_2:-ollama/llama3}|g" \
+      -e "s|__HERMES_REFLECTOR_MODEL__|${REFLECTOR_MODEL:-deepseek/deepseek-chat}|g" \
+      -e "s|__HERMES_REFLECTOR_CHAIN_0__|${REFLECTOR_CHAIN_0:-deepseek/deepseek-chat}|g" \
+      -e "s|__HERMES_REFLECTOR_CHAIN_1__|${REFLECTOR_CHAIN_1:-ollama/llama3}|g" \
+      -e "s|__HERMES_REFLECTOR_CHAIN_2__|${REFLECTOR_CHAIN_2:-}|g" \
       -e "s|__HERMES_PROFILE_REFLECTOR__|${PROFILE_REFLECTOR:-reflector}|g" \
       "$1")
   # Multi-line YAML lists: use awk for the two remaining vars

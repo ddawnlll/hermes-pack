@@ -67,38 +67,33 @@ After Praxis PASS:
   - human_available = false (AFK) → **PARK** + safe-default **HOLD**. Continue with other hypotheses. No global stall.
   - t4_budget <= 0 → HOLD (budget exhausted)
 
-### Phase 4: Channel Dispatch (v0.5)
+### Phase 4: Channel Dispatch (v0.5 — Deterministic)
+
 Run only when no workers are active and the system is in idle/consolidate phase.
+Use the deterministic dispatcher — do NOT assemble channel commands manually.
 
-1. **Reflector dispatch** — Run `reflector-dispatch.sh` to check if consolidation is needed.
-   - Uses feature-flags.py to verify reflector is not disabled.
-   - In shadow mode, writes proposals to `reflector_proposals.yaml`.
-   - In active mode, updates `beliefs.yaml` directly.
-   - Stagnation and momentum are computed deterministically from the ledger (not invented by LLM).
-
-2. **Analogy channel** — If `analogy_channel=true` and budget available, run:
+1. **Tick start** — Initialize or recover the transaction journal:
    ```bash
-   channel-budget.py can-run state.json analogy
+   python3 templates/scripts/tick-runtime.py init <ledger>/state.json <ledger>/journal
    ```
-   Retrieves cross-project analogies via `analogy-channel.py retrieve`.
 
-3. **Dream/replay channel** — If `dream_channel=true`, run:
+2. **Reflector dispatch** — Run `reflector-dispatch.sh` (checks feature flags + readiness):
+   - Shadow mode: writes proposals to `reflector_proposals.yaml`
+   - Active mode: blocked unless readiness artifact is valid
+
+3. **Channel dispatch** — For each enabled channel, run the deterministic dispatcher:
    ```bash
-   channel-budget.py can-run state.json dream
-   dream-channel.py dream state.json dreams/ <seed>
+   python3 templates/scripts/channel-dispatch.py <state_file> <journal_dir> <channel>
    ```
-   Generation and filtering are temporally separated.
+   This single command: inspects state, checks flag+budget, derives operation key,
+   consults journal, executes channel, records provenance, records spend, commits journal.
 
-4. **Whisper/briefing channel** — If `whisper_channel=true`, run:
+4. **Tick end** — Complete the tick:
    ```bash
-   channel-budget.py can-run state.json whisper
-   whisper-channel.py brief whispers/ briefings/
+   python3 templates/scripts/tick-runtime.py tick-end <ledger>/state.json <ledger>/journal
    ```
-   External input is UNTRUSTED and never modifies canonical beliefs.
 
-5. **Calibration/affect** — If `affect_modulation=true`, update predictions and Brier score.
-
-All channels produce CANDIDATE material only. Normal verification and authority gates remain mandatory. Channel output never bypasses hypothesis validation.
+All channel output is CANDIDATE material only. Normal verification and authority gates remain mandatory. Channel output never bypasses hypothesis validation.
 
 ### Phase 5: Memory & Merge
 - **Praxis PASS + gate verdict →** write verified facts to memory

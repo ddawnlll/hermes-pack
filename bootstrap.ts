@@ -117,9 +117,8 @@ const DEFAULTS: AdapterConfig = {
         "deepseek/deepseek-chat",
         "ollama/llama3",
       ],
-      reflector_model: "openrouter/anthropic/claude-sonnet-4-20250514",
+      reflector_model: "openrouter/deepseek/deepseek-chat",
       reflector_chain: [
-        "claude-sonnet-4-20250514",
         "deepseek/deepseek-chat",
         "ollama/llama3",
       ],

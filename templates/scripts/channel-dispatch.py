@@ -66,8 +66,9 @@ def dispatch(state_file, journal_dir, channel, seed=None):
             "channel": channel,
         }
 
-    # 4. Derive operation key
-    op_key = f"channel:{channel}:tick-{state.get('tick', 0)}:run-{uuid.uuid4().hex[:8]}"
+    # 4. Derive stable operation key (NO random UUID)
+    tick_n = state.get("tick", 0)
+    op_key = f"channel:{channel}:tick-{tick_n}"
 
     # 5. Consult tick journal
     journal_result = run_py("tick-journal.py", "already-applied", journal_dir, op_key)

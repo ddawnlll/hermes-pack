@@ -187,6 +187,21 @@ def cmd_set(state_file, feature_name, value_str):
         }, indent=2))
         sys.exit(1)
 
+    # Active-mode interlock: must have valid readiness
+    if feature_name == "reflector" and value == "active":
+        # Run readiness check first
+        import subprocess
+        rc_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                "readiness-check.py")
+        if os.path.exists(rc_path):
+            r = subprocess.run([sys.executable, rc_path, state_file,
+                               os.path.join(os.path.dirname(os.path.dirname(state_file)), "beliefs.yaml")],
+                               capture_output=True, text=True, timeout=30)
+            if r.returncode != 0:
+                print(json.dumps({"error": "Readiness check failed: reflector=active not allowed",
+                                  "details": r.stdout[:500] if r.stdout else r.stderr[:500]}, indent=2))
+                sys.exit(1)
+
     # Load existing flags, update, save
     flags = load_flags(state_file)
     old_val = flags.get(feature_name)
