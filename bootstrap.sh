@@ -41,6 +41,18 @@ DF_MERGE="pr_only"
 DF_MAX_PARALLEL=3
 DF_MAX_SPEND=25
 
+# Challenger / Arbiter defaults
+DF_CHALLENGER_MODEL="openrouter/mistralai/mistral-small"
+DF_CHALLENGER_CHAIN_0="mistralai/mistral-small"
+DF_CHALLENGER_CHAIN_1="ollama/llama3"
+DF_CHALLENGER_CHAIN_2=""
+DF_ARBITER_MODEL="anthropic/claude-sonnet-4-20250514"
+DF_ARBITER_CHAIN_0="claude-sonnet-4-20250514"
+DF_ARBITER_CHAIN_1="deepseek/deepseek-chat"
+DF_ARBITER_CHAIN_2="ollama/llama3"
+DF_PROFILE_CHALLENGER="challenger"
+DF_PROFILE_ARBITER="arbiter"
+
 # ----------------------------- helpers --------------------------------------
 say()  { printf '\033[1;32m[hermes-setup]\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[hermes-setup] WARN:\033[0m %s\n' "$*"; }
@@ -111,6 +123,53 @@ load_adapter() {
   MERGE=$(extract_str "$file" "merge_policy" "$DF_MERGE")
   MAX_PARALLEL=$(extract_str "$file" "max_parallel_workers" "$DF_MAX_PARALLEL")
   MAX_SPEND=$(extract_str "$file" "max_llm_spend_per_day_usd" "$DF_MAX_SPEND")
+
+  # ── Challenger / Arbiter extraction ───────────────────────────────────────
+  CHALLENGER_MODEL=$(extract_str "$file" "challenger_model" "$DF_CHALLENGER_MODEL")
+  # If challenger field exists (separate provider), use it; else infer from model
+  local chal_prov
+  chal_prov=$(extract_str "$file" "challenger" "")
+  if [ -n "$chal_prov" ]; then
+    CHALLENGER_PROVIDER="$chal_prov"
+  else
+    CHALLENGER_PROVIDER="${CHALLENGER_MODEL%%/*}"
+  fi
+  ARBITER_MODEL=$(extract_str "$file" "arbiter_model" "$DF_ARBITER_MODEL")
+  local arb_prov
+  arb_prov=$(extract_str "$file" "arbiter" "")
+  if [ -n "$arb_prov" ]; then
+    ARBITER_PROVIDER="$arb_prov"
+  else
+    ARBITER_PROVIDER="${ARBITER_MODEL%%/*}"
+  fi
+  PROFILE_CHALLENGER=$(extract_str "$file" "profile_challenger" "$DF_PROFILE_CHALLENGER")
+  PROFILE_ARBITER=$(extract_str "$file" "profile_arbiter" "$DF_PROFILE_ARBITER")
+
+  # ── Chain extraction (for litellm-config.yaml) ────────────────────────────
+  compute_chain_vars() {
+    local prefix="$1"  # e.g. CHALLENGER or ARBITER
+    local raw_chain
+    raw_chain=$(extract_yaml_list "$file" "${prefix,,}_chain" 2>/dev/null || echo "")
+    if [ -z "$raw_chain" ]; then
+      # Use defaults, injected via eval
+      return
+    fi
+    # Parse chain items into numbered variables
+    local i=0
+    while IFS= read -r line; do
+      local item
+      item=$(echo "$line" | sed 's/^  - //;s/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"')
+      [ -n "$item" ] && eval "${prefix}_CHAIN_${i}=\"$item\""
+      i=$((i + 1))
+    done <<< "$raw_chain"
+    # Fill remaining slots with empty string
+    while [ $i -lt 3 ]; do
+      eval "${prefix}_CHAIN_${i}=\"\""
+      i=$((i + 1))
+    done
+  }
+  compute_chain_vars "CHALLENGER"
+  compute_chain_vars "ARBITER"
 
   local allowed
   allowed=$(extract_yaml_list "$file" "allowed")
@@ -195,6 +254,18 @@ else
   MERGE="$DF_MERGE"
   MAX_PARALLEL="$DF_MAX_PARALLEL"
   MAX_SPEND="$DF_MAX_SPEND"
+  CHALLENGER_MODEL="$DF_CHALLENGER_MODEL"
+  CHALLENGER_PROVIDER="${CHALLENGER_MODEL%%/*}"
+  ARBITER_MODEL="$DF_ARBITER_MODEL"
+  ARBITER_PROVIDER="${ARBITER_MODEL%%/*}"
+  PROFILE_CHALLENGER="$DF_PROFILE_CHALLENGER"
+  PROFILE_ARBITER="$DF_PROFILE_ARBITER"
+  CHALLENGER_CHAIN_0="$DF_CHALLENGER_CHAIN_0"
+  CHALLENGER_CHAIN_1="$DF_CHALLENGER_CHAIN_1"
+  CHALLENGER_CHAIN_2="$DF_CHALLENGER_CHAIN_2"
+  ARBITER_CHAIN_0="$DF_ARBITER_CHAIN_0"
+  ARBITER_CHAIN_1="$DF_ARBITER_CHAIN_1"
+  ARBITER_CHAIN_2="$DF_ARBITER_CHAIN_2"
 fi
 
 say "project: $PROJECT_NAME"
@@ -226,6 +297,16 @@ sub() {
       -e "s|__HERMES_MAX_PARALLEL_WORKERS__|$MAX_PARALLEL|g" \
       -e "s|__HERMES_MAX_SPEND_PER_DAY__|$MAX_SPEND|g" \
       -e "s|__HERMES_REPO_DIR__|$REPO_DIR|g" \
+      -e "s|__HERMES_CHALLENGER_PROVIDER__|${CHALLENGER_PROVIDER:-openrouter}|g" \
+      -e "s|__HERMES_CHALLENGER_MODEL__|${CHALLENGER_MODEL:-mistralai/mistral-small}|g" \
+      -e "s|__HERMES_CHALLENGER_CHAIN_0__|${CHALLENGER_CHAIN_0:-mistralai/mistral-small}|g" \
+      -e "s|__HERMES_CHALLENGER_CHAIN_1__|${CHALLENGER_CHAIN_1:-ollama/llama3}|g" \
+      -e "s|__HERMES_CHALLENGER_CHAIN_2__|${CHALLENGER_CHAIN_2:-}|g" \
+      -e "s|__HERMES_ARBITER_PROVIDER__|${ARBITER_PROVIDER:-anthropic}|g" \
+      -e "s|__HERMES_ARBITER_MODEL__|${ARBITER_MODEL:-claude-sonnet-4-20250514}|g" \
+      -e "s|__HERMES_ARBITER_CHAIN_0__|${ARBITER_CHAIN_0:-claude-sonnet-4-20250514}|g" \
+      -e "s|__HERMES_ARBITER_CHAIN_1__|${ARBITER_CHAIN_1:-deepseek/deepseek-chat}|g" \
+      -e "s|__HERMES_ARBITER_CHAIN_2__|${ARBITER_CHAIN_2:-ollama/llama3}|g" \
       "$1")
   # Multi-line YAML lists: use awk for the two remaining vars
   echo "$tmp" | awk -v a="$ALLOWED_YAML" -v f="$FORBIDDEN_YAML" '
@@ -326,23 +407,35 @@ else
   for i in $(seq 1 "$WORKER_COUNT"); do
     install_profile "${PROFILE_WORKER_PREFIX}-${i}" "templates/config.worker.yaml" "templates/SOUL.worker.md"
   done
+  install_profile "$PROFILE_CHALLENGER" "templates/config.challenger.yaml" "templates/SOUL.challenger.md"
+  install_profile "$PROFILE_ARBITER" "templates/config.arbiter.yaml" "templates/SOUL.arbiter.md"
 
   # ----------------------------- gate script ----------------------------------
   if $DRY_RUN; then
     dry "mkdir -p $HERMES_SCRIPTS"
     dry "sub templates/scripts/tick-gate.sh > $HERMES_SCRIPTS/${TICK_NAME}-gate.sh"
     dry "chmod +x $HERMES_SCRIPTS/${TICK_NAME}-gate.sh"
+    dry "cp templates/scripts/self-grade-diff.py $HERMES_SCRIPTS/self-grade-diff.py"
+    dry "chmod +x $HERMES_SCRIPTS/self-grade-diff.py"
+    dry "cp templates/scripts/prereg-lock.py $HERMES_SCRIPTS/prereg-lock.py"
+    dry "chmod +x $HERMES_SCRIPTS/prereg-lock.py"
   else
     mkdir -p "$HERMES_SCRIPTS"
     sub "$HERE/templates/scripts/tick-gate.sh" > "$HERMES_SCRIPTS/${TICK_NAME}-gate.sh"
     chmod +x "$HERMES_SCRIPTS/${TICK_NAME}-gate.sh"
     say "gate script installed: $HERMES_SCRIPTS/${TICK_NAME}-gate.sh"
+    cp "$HERE/templates/scripts/self-grade-diff.py" "$HERMES_SCRIPTS/self-grade-diff.py"
+    chmod +x "$HERMES_SCRIPTS/self-grade-diff.py"
+    say "gate script installed: $HERMES_SCRIPTS/self-grade-diff.py"
+    cp "$HERE/templates/scripts/prereg-lock.py" "$HERMES_SCRIPTS/prereg-lock.py"
+    chmod +x "$HERMES_SCRIPTS/prereg-lock.py"
+    say "gate script installed: $HERMES_SCRIPTS/prereg-lock.py"
   fi
 
   # ----------------------------- repo ledger ----------------------------------
   LEDGER="$REPO_DIR/$LEDGER_DIR"
   if $DRY_RUN; then
-    dry "mkdir -p $LEDGER/{hypotheses,runs,reports}"
+    dry "mkdir -p $LEDGER/{hypotheses,runs,reports,challenger,arbiter,locks}"
     dry "sub templates/control.yaml > $LEDGER/control.yaml (only if missing)"
     dry "sub templates/state.json > $LEDGER/state.json (only if missing)"
     if [ -n "$ADAPTER" ]; then
@@ -354,7 +447,7 @@ else
       dry "sub templates/AGENTS.md > $REPO_DIR/AGENTS.md (only if missing)"
     fi
   else
-    mkdir -p "$LEDGER"/{hypotheses,runs,reports}
+    mkdir -p "$LEDGER"/{hypotheses,runs,reports,challenger,arbiter,locks}
     if [ ! -f "$LEDGER/control.yaml" ]; then
       sub "$HERE/templates/control.yaml" > "$LEDGER/control.yaml"
     fi
@@ -444,7 +537,7 @@ else
     ledger: \"$LEDGER_DIR\"
     board: \"$BOARD_NAME\"
     tick: \"$TICK_NAME\"
-    profiles: [$PROFILE_ORCH$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", ${PROFILE_WORKER_PREFIX}-${i}"; done)]
+    profiles: [$PROFILE_ORCH$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", ${PROFILE_WORKER_PREFIX}-${i}"; done), $PROFILE_CHALLENGER, $PROFILE_ARBITER]
     status: \"active\"
     goal_status: \"none\"
     registered_at: \"$REGISTRY_TIMESTAMP\"
@@ -472,7 +565,7 @@ print(json.dumps({
     'ledger': '$LEDGER_DIR',
     'board': '$BOARD_NAME',
     'tick': '$TICK_NAME',
-    'profiles': ['$PROFILE_ORCH'$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", '${PROFILE_WORKER_PREFIX}-${i}'"; done)],
+    'profiles': ['$PROFILE_ORCH'$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", '${PROFILE_WORKER_PREFIX}-${i}'"; done), '$PROFILE_CHALLENGER', '$PROFILE_ARBITER'],
     'status': 'active',
     'goal_status': 'none',
     'registered_at': '$REGISTRY_TIMESTAMP',
@@ -501,7 +594,7 @@ registry = {
         'ledger': '$LEDGER_DIR',
         'board': '$BOARD_NAME',
         'tick': '$TICK_NAME',
-        'profiles': ['$PROFILE_ORCH'$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", '${PROFILE_WORKER_PREFIX}-${i}'"; done)],
+        'profiles': ['$PROFILE_ORCH'$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", '${PROFILE_WORKER_PREFIX}-${i}'"; done), '$PROFILE_CHALLENGER', '$PROFILE_ARBITER'],
         'status': 'active',
         'goal_status': 'none',
         'registered_at': '$REGISTRY_TIMESTAMP',
@@ -525,7 +618,7 @@ if [ "$SETUP_MODE" = "custom" ]; then
   say "setup:      custom (adapter: ${ADAPTER:-default})"
 else
   say "mode:       orchestrator"
-  say "profiles:   $PROFILE_ORCH, ${PROFILE_WORKER_PREFIX}-1..${WORKER_COUNT}"
+  say "profiles:   $PROFILE_ORCH, ${PROFILE_WORKER_PREFIX}-1..${WORKER_COUNT}, $PROFILE_CHALLENGER, $PROFILE_ARBITER"
   say "tick:       $TICK_NAME ($TICK_SCHEDULE)"
 fi
 say "board:      $BOARD_NAME"

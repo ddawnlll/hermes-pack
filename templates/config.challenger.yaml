@@ -1,0 +1,9 @@
+# Profile: challenger — independent evidence adversary. Decorrelated from worker.
+provider: __HERMES_CHALLENGER_PROVIDER__
+model: __HERMES_CHALLENGER_MODEL__
+
+delegation:
+  orchestrator_enabled: false
+
+goals:
+  max_turns: 5
