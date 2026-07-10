@@ -439,7 +439,7 @@ else
   done
   install_profile "$PROFILE_CHALLENGER" "templates/config.challenger.yaml" "templates/SOUL.challenger.md"
   install_profile "$PROFILE_ARBITER" "templates/config.arbiter.yaml" "templates/SOUL.arbiter.md"
-  install_profile "$PROFILE_REFLECTOR" "templates/config.worker.yaml" "templates/SOUL.reflector.md"
+  install_profile "$PROFILE_REFLECTOR" "templates/config.reflector.yaml" "templates/SOUL.reflector.md"
   say "reflector profile: $PROFILE_REFLECTOR (shadow mode by default, active only after containment verified)"
 
   # ----------------------------- gate script ----------------------------------
@@ -456,21 +456,26 @@ else
     sub "$HERE/templates/scripts/tick-gate.sh" > "$HERMES_SCRIPTS/${TICK_NAME}-gate.sh"
     chmod +x "$HERMES_SCRIPTS/${TICK_NAME}-gate.sh"
     say "gate script installed: $HERMES_SCRIPTS/${TICK_NAME}-gate.sh"
-    cp "$HERE/templates/scripts/self-grade-diff.py" "$HERMES_SCRIPTS/self-grade-diff.py"
-    chmod +x "$HERMES_SCRIPTS/self-grade-diff.py"
-    say "gate script installed: $HERMES_SCRIPTS/self-grade-diff.py"
-    cp "$HERE/templates/scripts/prereg-lock.py" "$HERMES_SCRIPTS/prereg-lock.py"
-    chmod +x "$HERMES_SCRIPTS/prereg-lock.py"
-    say "gate script installed: $HERMES_SCRIPTS/prereg-lock.py"
-    # ── v0.5 scripts ──────────────────────────────────────────
+    # ── Deterministic gate scripts (templated) ─────────────────
+    for script in self-grade-diff.py prereg-lock.py; do
+      src="$HERE/templates/scripts/$script"
+      [ -f "$src" ] || die "Required script missing: $src"
+      sub "$src" > "$HERMES_SCRIPTS/$script"
+      chmod +x "$HERMES_SCRIPTS/$script"
+      say "gate script installed: $HERMES_SCRIPTS/$script"
+    done
+    # ── v0.5 runtime scripts (templated — substituted for placeholders) ──
     for script in blame-propagation.py provenance-track.py feature-flags.py \
                   containment-engine.py reflector-dispatch.sh \
                   analogy-channel.py dream-channel.py whisper-channel.py \
-                  calibration-channel.py tick-journal.py; do
-      cp "$HERE/templates/scripts/$script" "$HERMES_SCRIPTS/$script"
+                  calibration-channel.py channel-budget.py channel-dispatch.py \
+                  readiness-check.py tick-journal.py tick-runtime.py; do
+      src="$HERE/templates/scripts/$script"
+      [ -f "$src" ] || die "Required v0.5 script missing: $src"
+      sub "$src" > "$HERMES_SCRIPTS/$script"
       chmod +x "$HERMES_SCRIPTS/$script" 2>/dev/null || true
     done
-    say "v0.5 scripts: blame, provenance, feature-flags, containment, reflector, channels, journal"
+    say "v0.5 runtime scripts installed (with template substitution)"
   fi
 
   # ----------------------------- repo ledger ----------------------------------
@@ -498,6 +503,11 @@ else
     fi
     if [ ! -f "$LEDGER/state.json" ]; then
       sub "$HERE/templates/state.json" > "$LEDGER/state.json"
+      say "state.json created (v2 with v0.5 defaults)"
+    fi
+    if [ ! -f "$LEDGER/beliefs.yaml" ]; then
+      sub "$HERE/templates/beliefs.yaml" > "$LEDGER/beliefs.yaml"
+      say "beliefs.yaml created (empty v0.5 workspace)"
     fi
     if [ -n "$ADAPTER" ]; then
       adapter_hyp="$HERE/adapters/$ADAPTER/hypotheses.seed.yaml"
@@ -566,92 +576,81 @@ fi
 # ----------------------------- registry update --------------------------------
 HEPHAESTUS_DIR="${HEPHAESTUS_DIR:-$HOME/.hephaestus}"
 REGISTRY_FILE="$HEPHAESTUS_DIR/registry.yaml"
-REGISTRY_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || python -c "from datetime import datetime; print(datetime.utcnow().isoformat()+'Z')" 2>/dev/null || echo "$(date +%Y-%m-%dT%H:%M:%SZ)")
+REGISTRY_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+BUILD_PROFILES="[$PROFILE_ORCH,"
+for i in $(seq 1 $WORKER_COUNT); do BUILD_PROFILES="$BUILD_PROFILES ${PROFILE_WORKER_PREFIX}-${i},"; done
+BUILD_PROFILES="$BUILD_PROFILES $PROFILE_CHALLENGER, $PROFILE_ARBITER, $PROFILE_REFLECTOR]"
 
 if $DRY_RUN; then
   dry "update registry at $REGISTRY_FILE"
   dry "  register: $PROJECT_NAME ($REPO_DIR)"
+  dry "  profiles: $BUILD_PROFILES"
 else
   mkdir -p "$HEPHAESTUS_DIR"
 
-  # Build YAML entry
-  REGISTRY_ENTRY="
-  - name: \"$PROJECT_NAME\"
-    adapter: \"${ADAPTER:-default}\"
-    repo: \"$REPO_DIR\"
-    ledger: \"$LEDGER_DIR\"
-    board: \"$BOARD_NAME\"
-    tick: \"$TICK_NAME\"
-    profiles: [$PROFILE_ORCH$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", ${PROFILE_WORKER_PREFIX}-${i}"; done), $PROFILE_CHALLENGER, $PROFILE_ARBITER, $PROFILE_REFLECTOR]
-    status: \"active\"
-    goal_status: \"none\"
-    registered_at: \"$REGISTRY_TIMESTAMP\"
-    updated_at: \"$REGISTRY_TIMESTAMP\""
+  # Use a single Python heredoc — clean, no nested quoting
+  python3 << PYEOF 2>&1
+import json, os, yaml
 
-  if [ -f "$REGISTRY_FILE" ] && grep -q "repo: \"$REPO_DIR\"" "$REGISTRY_FILE" 2>/dev/null; then
-    # Update existing entry — simple approach: remove old entry, append new
-    python -c "
-import re, yaml
-with open('$REGISTRY_FILE', encoding='utf-8') as f:
-    content = f.read()
-registry = yaml.safe_load(content) or {'schema_version': 1, 'projects': []}
-if not isinstance(registry, dict): registry = {'schema_version': 1, 'projects': []}
-if 'projects' not in registry: registry['projects'] = []
-# Remove existing entry with this repo
-registry['projects'] = [p for p in registry['projects'] if p.get('repo') != '$REPO_DIR']
+# Read values from environment (safe — no shell quoting issues)
+project = "$PROJECT_NAME"
+adapter = "${ADAPTER:-default}"
+repo = "$REPO_DIR"
+ledger = "$LEDGER_DIR"
+board = "$BOARD_NAME"
+tick = "$TICK_NAME"
+ts = "$REGISTRY_TIMESTAMP"
+
+# Build profile list from env
+profile_names = $BUILD_PROFILES
+
+registry_file = "$REGISTRY_FILE"
+
+# Load existing or create new
+if os.path.exists(registry_file):
+    with open(registry_file, encoding='utf-8') as f:
+        content = f.read()
+    registry = yaml.safe_load(content) or {'schema_version': 1, 'projects': []}
+    if not isinstance(registry, dict) or 'projects' not in registry:
+        registry = {'schema_version': 1, 'projects': []}
+    # Find existing entry by repo
+    existing_registered_at = ts
+    for p in registry['projects']:
+        if p.get('repo') == repo:
+            existing_registered_at = p.get('registered_at', ts)
+            break
+    # Remove old entry (idempotent)
+    registry['projects'] = [p for p in registry['projects'] if p.get('repo') != repo]
+else:
+    registry = {'schema_version': 1, 'projects': []}
+    existing_registered_at = ts
+
 # Add new entry
-import json
-entry = json.loads('''$(python -c "
-import json
-print(json.dumps({
-    'name': '$PROJECT_NAME',
-    'adapter': '${ADAPTER:-default}',
-    'repo': '$REPO_DIR',
-    'ledger': '$LEDGER_DIR',
-    'board': '$BOARD_NAME',
-    'tick': '$TICK_NAME',
-    'profiles': ['$PROFILE_ORCH'$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", '${PROFILE_WORKER_PREFIX}-${i}'"; done), '$PROFILE_CHALLENGER', '$PROFILE_ARBITER', '$PROFILE_REFLECTOR'],
+entry = {
+    'name': project,
+    'adapter': adapter,
+    'repo': repo,
+    'ledger': ledger,
+    'board': board,
+    'tick': tick,
+    'profiles': profile_names,
     'status': 'active',
     'goal_status': 'none',
-    'registered_at': '$REGISTRY_TIMESTAMP',
-    'updated_at': '$REGISTRY_TIMESTAMP',
-}))
-''')
-)
-registry['projects'].append(entry)
-with open('$REGISTRY_FILE', 'w', encoding='utf-8') as f:
-    yaml.dump(registry, f, indent=2, default_flow_style=False, allow_unicode=True)
-print('Registry updated for $PROJECT_NAME')
-" 2>&1
-    say "registry updated: $PROJECT_NAME (existing entry)"
-  else
-    # Create new registry
-    mkdir -p "$HEPHAESTUS_DIR"
-    # Use python for YAML write
-    python -c "
-import yaml
-registry = {
-    'schema_version': 1,
-    'projects': [{
-        'name': '$PROJECT_NAME',
-        'adapter': '${ADAPTER:-default}',
-        'repo': '$REPO_DIR',
-        'ledger': '$LEDGER_DIR',
-        'board': '$BOARD_NAME',
-        'tick': '$TICK_NAME',
-        'profiles': ['$PROFILE_ORCH'$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", '${PROFILE_WORKER_PREFIX}-${i}'"; done), '$PROFILE_CHALLENGER', '$PROFILE_ARBITER', '$PROFILE_REFLECTOR'],
-        'status': 'active',
-        'goal_status': 'none',
-        'registered_at': '$REGISTRY_TIMESTAMP',
-        'updated_at': '$REGISTRY_TIMESTAMP',
-    }]
+    'registered_at': existing_registered_at,
+    'updated_at': ts,
 }
-with open('$REGISTRY_FILE', 'w', encoding='utf-8') as f:
+registry['projects'].append(entry)
+
+with open(registry_file, 'w', encoding='utf-8') as f:
     yaml.dump(registry, f, indent=2, default_flow_style=False, allow_unicode=True)
-print('Registry created at $REGISTRY_FILE')
-" 2>&1
-    say "registry written: $PROJECT_NAME -> $REGISTRY_FILE"
-  fi
+
+if os.path.exists(registry_file):
+    print(f'Registry updated for {project}')
+else:
+    print(f'Registry created at {registry_file}')
+PYEOF
+  say "registry: $PROJECT_NAME -> $REGISTRY_FILE"
 fi
 
 # ----------------------------- summary --------------------------------------

@@ -81,7 +81,7 @@
     },
     "beliefs": {
       "type": "object",
-      "description": "Beliefs workspace summary.",
+      "description": "Beliefs workspace summary. capacity must always be 12 (contractual active-workspace limit).",
       "properties": {
         "count": {
           "type": "integer",
@@ -91,10 +91,10 @@
         },
         "capacity": {
           "type": "integer",
-          "description": "Maximum number of beliefs allowed.",
-          "minimum": 8,
-          "maximum": 1024,
-          "default": 128
+          "description": "Maximum active beliefs. Contractually locked at exactly 12.",
+          "minimum": 12,
+          "maximum": 12,
+          "default": 12
         },
         "active_count": {
           "type": "integer",
@@ -193,6 +193,11 @@
       },
       "additionalProperties": false,
       "default": {}
+    },
+    "channel_spend_date": {
+      "type": "string",
+      "description": "UTC date string (YYYY-MM-DD) of the last channel spend reset. When the UTC date changes, all channel_spend_today counters auto-reset.",
+      "default": ""
     },
     "calibration": {
       "type": "object",

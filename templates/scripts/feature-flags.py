@@ -89,15 +89,45 @@ def check_feature(state_file, feature_name):
     value = flags.get(feature_name, FLAG_DEFAULTS[feature_name])
 
     if feature_name == "reflector":
-        # Reflector allowed in both shadow and active mode
-        allowed = value in ("shadow", "active")
-        return {
-            "feature": feature_name,
-            "allowed": allowed,
-            "value": value,
-            "mode": value,
-            "reason": "" if allowed else f"Reflector is '{value}', must be 'shadow' or 'active'",
-        }
+        # Reflector allowed in shadow mode always
+        if value == "shadow":
+            return {"feature": feature_name, "allowed": True, "value": value,
+                    "mode": "shadow", "reason": ""}
+
+        # Active mode requires readiness check
+        if value == "active":
+            # Check readiness artifact
+            state_dir = os.path.dirname(state_file) if os.path.dirname(state_file) else "."
+            ledger_dir = os.path.dirname(state_file) if state_file != state_file else "."
+            readiness_path = os.path.join(os.path.dirname(os.path.abspath(state_file)), "reflector", "readiness.json") if os.path.exists(state_file) else ""
+            if not readiness_path or not os.path.exists(readiness_path):
+                return {"feature": feature_name, "allowed": False, "value": value,
+                        "mode": "active", "reason": "Readiness artifact missing. Run readiness-check.py first."}
+            try:
+                with open(readiness_path) as f:
+                    rd = json.load(f)
+                if not rd.get("all_checks_pass"):
+                    return {"feature": feature_name, "allowed": False, "value": value,
+                            "mode": "active", "reason": "Readiness checks failed. Fix containment issues first."}
+                # Check age (max 24h)
+                ts_str = rd.get("timestamp", "")
+                if ts_str:
+                    from datetime import datetime
+                    ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                    age = (datetime.utcnow() - ts.replace(tzinfo=None)).total_seconds()
+                    if age > 86400:
+                        return {"feature": feature_name, "allowed": False, "value": value,
+                                "mode": "active", "reason": f"Readiness expired ({age/3600:.1f}h > 24h)"}
+            except (json.JSONDecodeError, IOError, ValueError):
+                return {"feature": feature_name, "allowed": False, "value": value,
+                        "mode": "active", "reason": "Cannot read readiness artifact"}
+
+            return {"feature": feature_name, "allowed": True, "value": value,
+                    "mode": "active", "reason": "All containment checks pass"}
+
+        # disabled
+        return {"feature": feature_name, "allowed": False, "value": value,
+                "mode": "disabled", "reason": f"Reflector is 'disabled'"}
 
     # Boolean features
     if isinstance(value, bool):

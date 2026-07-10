@@ -770,8 +770,8 @@ async function main() {
     await installProfile(
       hermesBin, hermesRoot,
       challengerName,
-      "config.worker.yaml",
-      "SOUL.worker.md",
+      "config.challenger.yaml",
+      "SOUL.challenger.md",
       vars,
       false,
     );
@@ -782,8 +782,8 @@ async function main() {
     await installProfile(
       hermesBin, hermesRoot,
       arbiterName,
-      "config.worker.yaml",
-      "SOUL.worker.md",
+      "config.arbiter.yaml",
+      "SOUL.arbiter.md",
       vars,
       false,
     );
@@ -794,7 +794,7 @@ async function main() {
     await installProfile(
       hermesBin, hermesRoot,
       reflectorName,
-      "config.worker.yaml",
+      "config.reflector.yaml",
       "SOUL.reflector.md",
       vars,
       false,
@@ -815,15 +815,22 @@ async function main() {
       "blame-propagation.py", "provenance-track.py", "feature-flags.py",
       "containment-engine.py", "reflector-dispatch.sh",
       "analogy-channel.py", "dream-channel.py", "whisper-channel.py",
-      "calibration-channel.py", "tick-journal.py",
+      "calibration-channel.py", "channel-budget.py", "channel-dispatch.py",
+      "readiness-check.py", "tick-journal.py", "tick-runtime.py",
+      "self-grade-diff.py", "prereg-lock.py",
     ];
     for (const script of v05scripts) {
       const src = join(TEMPLATES_DIR, "scripts", script);
-      if (existsSync(src)) {
-        Bun.write(join(HERMES_SCRIPTS, script), await Bun.file(src).text());
+      if (!existsSync(src)) {
+        die(`Required v0.5 script missing: ${src}`);
       }
+      // Substitute placeholders in runtime scripts
+      const substituted = await subFile(src, vars);
+      Bun.write(join(HERMES_SCRIPTS, script), substituted);
+      // Make executable via chmod (Bun.write doesn't preserve mode)
+      Bun.spawnSync(["chmod", "+x", join(HERMES_SCRIPTS, script)], { shell: true });
     }
-    say("v0.5 scripts installed: blame, provenance, feature-flags, containment, reflector, channels, journal");
+    say(`v0.5 runtime scripts installed (${v05scripts.length} scripts with template substitution)`);
 
     // ── LiteLLM proxy config ──
     const litellmContent = await subFile(join(TEMPLATES_DIR, "litellm-config.yaml"), vars);
@@ -856,6 +863,12 @@ async function main() {
     if (!existsSync(join(ledgerDir, "state.json"))) {
       const state = await subFile(join(TEMPLATES_DIR, "state.json"), vars);
       Bun.write(join(ledgerDir, "state.json"), state);
+      say(`state.json created (v2 with v0.5 defaults)`);
+    }
+    if (!existsSync(join(ledgerDir, "beliefs.yaml"))) {
+      const beliefs = await subFile(join(TEMPLATES_DIR, "beliefs.yaml"), vars);
+      Bun.write(join(ledgerDir, "beliefs.yaml"), beliefs);
+      say(`beliefs.yaml created (empty v0.5 workspace)`);
     }
     if (!existsSync(join(ledgerDir, "goal.yaml"))) {
       const goalContent = await subFile(join(TEMPLATES_DIR, "goal.yaml"), vars);

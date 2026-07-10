@@ -1,6 +1,8 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "tick": 0,
+  "run_id": "",
+  "phase": "idle",
   "worker_status": {},
   "spend_today_usd": 0,
   "budget_usd": 25,
@@ -13,5 +15,41 @@
     "T3": 0,
     "T4": 0
   },
-  "goal_status": "none"
+  "goal_status": "none",
+  "beliefs": {
+    "count": 0,
+    "capacity": 12,
+    "active_count": 0,
+    "suspect_count": 0,
+    "last_eviction": null
+  },
+  "stagnation": 0,
+  "momentum": 0,
+  "features": {
+    "reflector": "shadow",
+    "suspect_enforcement": false,
+    "analogy_channel": false,
+    "dream_channel": false,
+    "affect_modulation": false,
+    "whisper_channel": false
+  },
+  "channel_budgets": {
+    "reflector": 0.50,
+    "analogy": 0.25,
+    "dream": 0.15,
+    "whisper": 0.10,
+    "calibration": 0.20
+  },
+  "channel_spend_today": {
+    "reflector": 0,
+    "analogy": 0,
+    "dream": 0,
+    "whisper": 0,
+    "calibration": 0
+  },
+  "calibration": {
+    "brier_score": 0.5,
+    "predictions_total": 0,
+    "calibration_curve": []
+  }
 }

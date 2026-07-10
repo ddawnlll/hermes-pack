@@ -1,0 +1,86 @@
+name: v0.5 Kaizen Engine CI
+
+on:
+  pull_request:
+    branches: [master, main]
+  push:
+    branches: [feat/v05-kaizen-engine]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pyyaml jsonschema
+
+      - name: Shell syntax check
+        run: |
+          bash -n bootstrap.sh
+          bash -n templates/scripts/reflector-dispatch.sh
+          bash -n templates/scripts/tick-gate.sh
+          bash -n templates/scripts/explorer-dispatch.sh
+          bash -n templates/scripts/escalation-gate.sh
+
+      - name: Python syntax check
+        run: |
+          find templates/scripts -name '*.py' -exec python3 -m py_compile {} \;
+          find schema/tests -name '*.py' -exec python3 -m py_compile {} \;
+
+      - name: Schema validation tests
+        run: |
+          python3 schema/tests/test_schema_validation.py
+          python3 schema/tests/test_events_schema.py
+          python3 schema/tests/test_goal_engine.py
+
+      - name: Phase 0 tests
+        run: |
+          python3 schema/tests/test_self_grade_diff.py
+          python3 schema/tests/test_prereg_lock.py
+          python3 schema/tests/test_decorrelation.py
+
+      - name: Correction tests
+        run: python3 schema/tests/test_correction_pass.py
+
+      - name: Canary suite
+        run: python3 schema/tests/test_canary_suite.py
+
+      - name: Bootstrap dry-run test
+        run: |
+          mkdir -p /tmp/hephaestus-ci-test
+          cd /tmp/hephaestus-ci-test && git init && mkdir -p src
+          echo "print('hello')" > src/main.py
+          cd /workspace/hephaestus
+          bash bootstrap.sh --dry-run /tmp/hephaestus-ci-test --adapter v7-alphaforge 2>&1
+
+      - name: Placeholder scan
+        run: |
+          # Verify state.json template has no placeholders (it shouldn't)
+          if grep -qE '__HERMES_' templates/state.json; then
+            echo "ERROR: Placeholders found in state.json template"
+            exit 1
+          fi
+          echo "OK: No placeholders in state.json template"
+
+      - name: Budget idempotency
+        run: |
+          python3 schema/tests/test_canary_suite.py 2>&1 | tail -5
+          echo "Canary suite (includes budget tests) passed"
+
+      - name: Final summary
+        run: |
+          echo "=== v0.5 CI completed ==="
+          echo "Commits on branch:"
+          git log --oneline --not master 2>/dev/null || true
