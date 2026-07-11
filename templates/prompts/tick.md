@@ -40,8 +40,42 @@ Praxis runs 6 gates:
 
 Exit codes: 0=PASS, 1=HOLD, 2=FAIL
 
-### Phase 3: Tri-Gate Pipeline (LLM Gates)
-After Praxis PASS:
+### Phase 3: Janus Gate (Forward/Backward Meta-Gate)
+After Praxis PASS, before any LLM gate runs, the Janus Gate checks both
+forward (exploration) and backward (falsifiability) faces:
+
+```bash
+bash templates/scripts/janus-gate.sh \
+  <evidence_bundle_path> \
+  __HERMES_LEDGER_DIR__/redteam/objections.jsonl \
+  <explorer_divergence_score>
+```
+
+- **Forward face** (Explorer #25 wiring): Checks scar-tissue memory for
+  similar refuted hypotheses. If the hypothesis re-litigates a refuted idea
+  without new evidence → **FAIL**.
+- **Backward face** (Red Team / falsifiability contract): Checks whether the
+  hypothesis makes a concrete, testable prediction (metric + threshold +
+  direction). If missing → **HOLD** (advisory).
+- This is a **deterministic gate** (no LLM) — checks structural properties only.
+- Depends on #22 (provider-chain decorrelation) and #23 (scar-tissue memory) — both complete.
+
+Exit codes: 0=PASS, 1=HOLD, 2=FAIL, 3=error
+
+If Janus forward face returns FAIL, the Red Team trigger is dispatched:
+
+```bash
+bash templates/scripts/red-team-trigger.sh \
+  <evidence_bundle_path> \
+  __HERMES_LEDGER_DIR__/redteam/objections.jsonl \
+  '<janus_forward_json>'
+```
+
+Creates a Red Team kanban task with the scar-tissue match context so a
+Red Team agent can review whether the new evidence genuinely differs.
+
+### Phase 4: Tri-Gate Pipeline (LLM Gates)
+After Praxis PASS and Janus Gate PASS:
 
 **T1 Proposer:**
 - Read the evidence bundle (runner JSON, test outputs, diff)
@@ -67,7 +101,7 @@ After Praxis PASS:
   - human_available = false (AFK) → **PARK** + safe-default **HOLD**. Continue with other hypotheses. No global stall.
   - t4_budget <= 0 → HOLD (budget exhausted)
 
-### Phase 4: Channel Dispatch (v0.5 — Deterministic)
+### Phase 5: Channel Dispatch (v0.5 — Deterministic)
 
 Run only when no workers are active and the system is in idle/consolidate phase.
 Use the deterministic dispatcher — do NOT assemble channel commands manually.
@@ -95,12 +129,12 @@ Use the deterministic dispatcher — do NOT assemble channel commands manually.
 
 All channel output is CANDIDATE material only. Normal verification and authority gates remain mandatory. Channel output never bypasses hypothesis validation.
 
-### Phase 5: Memory & Merge
+### Phase 6: Memory & Merge
 - **Praxis PASS + gate verdict →** write verified facts to memory
 - **Workers CANNOT write memory** — only orchestrator after verification
 - **Merge policy:** PR-only, never direct
 
-### Phase 6: Dispatch New Work
+### Phase 7: Dispatch New Work
 If capacity available:
 1. **Check scar-tissue memory first** — query Hindsight for `type: refuted_hypothesis` records with similar keywords. Do NOT re-dispatch a hypothesis that has been previously refuted (issue #23).
 2. **Check suspect beliefs** — run `blame-propagation.py check` to see if dependencies are blocked.
@@ -111,6 +145,7 @@ If capacity available:
 
 ## Hard Rules
 - **Praxis before T1.** No LLM gate runs before deterministic verification.
+- **Janus before T1.** Deterministic falsifiability/scar-tissue check runs before any LLM gate.
 - **No evidence = no claim.** Worker output without evidence is invalid.
 - **Workers don't write memory.** Ever.
 - **Challenger is read-only.** Read-only profile, no write tools.
