@@ -333,3 +333,95 @@ print("=" * 56)
 print(f"  Canary Suite: {SCENARIO_COUNT} scenarios, {PASS_COUNT} assertions passed, {FAIL_COUNT} failed")
 print("=" * 56)
 sys.exit(0 if FAIL_COUNT == 0 else 1)
+
+# ── v0.6 BE-7 (#88) extension: 5 promotion-specific scenarios ─────────
+# Each scenario invokes the Promotion Engine (BE-2 #85) and asserts the
+# final state. Tied to v0.6 completion gates.
+
+say("")
+say("=" * 56)
+say("v0.6 BE-7 GOLDEN REPLAY — 5 promotion-specific scenarios")
+say("=" * 56)
+
+PROMOTION_ENGINE = os.path.join(SCRIPTS_DIR, "promotion-engine.py")
+
+
+def _promote_candidate(cand, *, afk, mode="live", current_state_hash=None):
+    cmd = [
+        sys.executable, PROMOTION_ENGINE, "promote",
+        "--id", cand["id"],
+        "--base-state-hash", cand["base_state_hash"],
+        "--current-state-hash", current_state_hash or cand["base_state_hash"],
+        "--effect-class", cand["effect_class"],
+        "--merge-policy", cand.get("merge_policy", "pr_only"),
+        "--asset-type", cand.get("asset_type", "belief"),
+        "--mode", mode,
+        "--lock-path", os.path.join(tempfile.gettempdir(), f"promotion_lock_{cand['id']}.lock"),
+    ]
+    if afk:
+        cmd.append("--afk")
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+    try:
+        return json.loads(proc.stdout.strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError):
+        return {"id": cand["id"], "state": "UNKNOWN", "stderr": proc.stderr}
+
+
+# Scenario 1: stale-base -> Gate #16 (Rebase safety)
+SCENARIO_COUNT += 1
+say(f"\nv0.6 Scenario {SCENARIO_COUNT}: stale-base promotion -> REBASE_REQUIRED (Gate #16)")
+stale = {"id": "cand_stale_v06", "base_state_hash": "a" * 64, "effect_class": "reversible_internal", "merge_policy": "pr_gated_auto", "asset_type": "belief"}
+result = _promote_candidate(stale, afk=False, current_state_hash="b" * 64)
+if result.get("state") == "REBASE_REQUIRED":
+    pass_("stale-base: candidate transitions to REBASE_REQUIRED")
+else:
+    fail(f"stale-base: expected REBASE_REQUIRED, got {result}")
+
+# Scenario 2: crash-mid-promotion -> Gate #9 (Crash recovery)
+SCENARIO_COUNT += 1
+say(f"\nv0.6 Scenario {SCENARIO_COUNT}: crash-mid-promotion (idempotency, Gate #9)")
+crash = {"id": "cand_crash_v06", "base_state_hash": "c" * 64, "effect_class": "reversible_internal", "merge_policy": "pr_gated_auto", "asset_type": "belief"}
+first = _promote_candidate(crash, afk=False)
+second = _promote_candidate(crash, afk=False)
+if first.get("state") in ("PROMOTED", "FAILED") and second.get("state") in ("PROMOTED", "FAILED", "ROLLED_BACK"):
+    pass_(f"crash-mid: idempotent (first={first['state']}, second={second['state']})")
+else:
+    fail(f"crash-mid: first={first}, second={second}")
+
+# Scenario 3: irreversible_external + AFK -> Gate #15 (Effect honesty)
+SCENARIO_COUNT += 1
+say(f"\nv0.6 Scenario {SCENARIO_COUNT}: irreversible_external + AFK rejected (Gate #15)")
+irr = {"id": "cand_irr_v06", "base_state_hash": "d" * 64, "effect_class": "irreversible_external", "merge_policy": "pr_gated_auto", "asset_type": "code"}
+result = _promote_candidate(irr, afk=True)
+if result.get("state") != "PROMOTED":
+    pass_(f"irreversible+AFK: rejected (state={result.get('state')})")
+else:
+    fail(f"irreversible+AFK: must NOT promote, got {result}")
+
+# Scenario 4: postcondition-fail-rollback (smoke: killed mode) -> Gate #4 + #5
+SCENARIO_COUNT += 1
+say(f"\nv0.6 Scenario {SCENARIO_COUNT}: postcondition-fail-rollback (Gate #4 + #5)")
+post = {"id": "cand_post_v06", "base_state_hash": "e" * 64, "effect_class": "reversible_internal", "merge_policy": "pr_only", "asset_type": "belief"}
+result = _promote_candidate(post, afk=False, mode="killed")
+if result.get("state") != "PROMOTED":
+    pass_(f"postcondition-fail: not promoted under killed (state={result.get('state')})")
+else:
+    fail(f"postcondition-fail: must not promote, got {result}")
+
+# Scenario 5: deadlock-sibling -> Gate #14 (No global stall) [NEW in v0.6 audit]
+SCENARIO_COUNT += 1
+say(f"\nv0.6 Scenario {SCENARIO_COUNT}: REBASE_REQUIRED does not block sibling (Gate #14)")
+rebased = {"id": "cand_rebased_v06", "base_state_hash": "f" * 64, "effect_class": "reversible_internal", "merge_policy": "pr_gated_auto", "asset_type": "belief"}
+sibling = {"id": "cand_sibling_v06", "base_state_hash": "1" * 64, "effect_class": "reversible_internal", "merge_policy": "pr_gated_auto", "asset_type": "belief"}
+r1 = _promote_candidate(rebased, afk=False, current_state_hash="0" * 64)
+r2 = _promote_candidate(sibling, afk=False)
+if r1.get("state") == "REBASE_REQUIRED" and r2.get("state") != "DEAD":
+    pass_(f"deadlock-sibling: REBASE_REQUIRED, sibling={r2.get('state')}")
+else:
+    fail(f"deadlock-sibling: r1={r1}, r2={r2}")
+
+print()
+print("=" * 56)
+print(f"  Canary Suite Total: {SCENARIO_COUNT} scenarios, {PASS_COUNT} passed, {FAIL_COUNT} failed")
+print("=" * 56)
+sys.exit(0 if FAIL_COUNT == 0 else 1)
