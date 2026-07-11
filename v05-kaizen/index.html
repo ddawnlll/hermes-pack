@@ -1,0 +1,1701 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Autonomous, evidence-gated improvement loop for any codebase. Explore freely. Prove ruthlessly.">
+      
+      
+        <meta name="author" content="ddawnlll">
+      
+      
+      
+        <link rel="prev" href="../architecture/">
+      
+      
+        <link rel="next" href="../adapters/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>v0.5 Kaizen Engine - Hephaestus</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#v05-kaizen-engine" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Hephaestus" class="md-header__button md-logo" aria-label="Hephaestus" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Hephaestus
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              v0.5 Kaizen Engine
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ddawnlll/hephaestus" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ddawnlll/hephaestus
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../getting-started/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architecture
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  v0.5 Kaizen Engine
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../adapters/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Adapters
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../schemas/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Schemas
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../souls/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  SOUL Personas
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../praxis/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Praxis Integration
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../contributing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Contributing
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Hephaestus" class="md-nav__button md-logo" aria-label="Hephaestus" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Hephaestus
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ddawnlll/hephaestus" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ddawnlll/hephaestus
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.5 Kaizen Engine
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.5 Kaizen Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-was-the-v04-deadlock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What was the v0.4 deadlock?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-0-debt-cleared" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 0 — debt cleared
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-belief-workspace-reflector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1 — Belief workspace + Reflector
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 1 — Belief workspace + Reflector">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#relies_on-the-load-bearing-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        relies_on — the load-bearing change
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#beliefs-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Beliefs workspace
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reflector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reflector
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stagnation-momentum-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stagnation / momentum signals
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-containment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2 — Containment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-idea-channels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3 — Idea channels
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 3 — Idea channels">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#analogy-channel-65" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analogy channel (#65)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#random-leap-channel-66" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Random-leap channel (#66)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#affect-channel-67" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Affect channel (#67)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#context-channel-68" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context channel (#68)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-provenance-measurement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4 — Provenance + measurement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-5-runtime-reliability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5 — Runtime reliability
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 5 — Runtime reliability">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tick-transaction-journal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tick transaction journal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#canary-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Canary suite
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-from-v04" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration from v0.4
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's next
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adapters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adapters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../schemas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schemas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../souls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SOUL Personas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../praxis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Praxis Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-was-the-v04-deadlock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What was the v0.4 deadlock?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-0-debt-cleared" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 0 — debt cleared
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-belief-workspace-reflector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1 — Belief workspace + Reflector
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 1 — Belief workspace + Reflector">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#relies_on-the-load-bearing-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        relies_on — the load-bearing change
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#beliefs-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Beliefs workspace
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reflector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reflector
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stagnation-momentum-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stagnation / momentum signals
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-containment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2 — Containment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-idea-channels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3 — Idea channels
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 3 — Idea channels">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#analogy-channel-65" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analogy channel (#65)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#random-leap-channel-66" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Random-leap channel (#66)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#affect-channel-67" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Affect channel (#67)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#context-channel-68" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context channel (#68)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-provenance-measurement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4 — Provenance + measurement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-5-runtime-reliability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5 — Runtime reliability
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 5 — Runtime reliability">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tick-transaction-journal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tick transaction journal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#canary-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Canary suite
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-from-v04" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration from v0.4
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's next
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="v05-kaizen-engine">v0.5 — Kaizen Engine<a class="headerlink" href="#v05-kaizen-engine" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Shipped in <a href="https://github.com/ddawnlll/hephaestus/releases/tag/v0.5.0-kaizen">v0.5.0-kaizen</a></strong>
+via PR <a href="https://github.com/ddawnlll/hephaestus/pull/73">#73</a>.
+21 issues closed (#52–#72). 191 tests pass. Praxis evidence:
+<code>.praxis/runs/v05-full-evidence.jsonl</code>.</p>
+</blockquote>
+<p>The Kaizen Engine turns the loop into a self-improving system. Four additions:</p>
+<ol>
+<li><strong>Belief workspace</strong> — narrow, capacity-limited, single-writer. Global Workspace analog.</li>
+<li><strong>Reflector</strong> — the third face. Consolidates, explains, rewrites the system's shared
+   assumptions.</li>
+<li><strong>Idea channels</strong> — four independent idea streams (analogy, dream, whisper, calibration)
+   that supply diversity at volume.</li>
+<li><strong>Containment</strong> — explicit handling of the new deadlock modes the v0.5 system creates.</li>
+</ol>
+<h2 id="what-was-the-v04-deadlock">What was the v0.4 deadlock?<a class="headerlink" href="#what-was-the-v04-deadlock" title="Permanent link">&para;</a></h2>
+<p>In v0.4, the system was a clean per-bundle pipeline: worker → Praxis → T1 → T2 → T3 →
+merge. But the loop never <em>learned</em> in a structured way — every tick was a fresh
+hypothesis with no accumulation of <em>what the system believes about the world</em>.</p>
+<p>In particular: when three hypotheses relying on belief B-X all FAIL, the system should
+notice and mark B-X as suspect. In v0.4 there was no such mechanism. v0.5 fixes this
+with <code>relies_on</code> + blame propagation.</p>
+<h2 id="phase-0-debt-cleared">Phase 0 — debt cleared<a class="headerlink" href="#phase-0-debt-cleared" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/ddawnlll/hephaestus/issues?q=label%3Aphase-0-debt">Issues #52–#55</a></p>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>#52</td>
+<td>T2 Challenger and T3 Arbiter SOUL persona files (were missing)</td>
+</tr>
+<tr>
+<td>#53</td>
+<td><code>self-grade-diff.py</code> — orphan test existed but no implementation</td>
+</tr>
+<tr>
+<td>#54</td>
+<td><code>prereg-lock.py</code> — folded into hypothesis dispatch</td>
+</tr>
+<tr>
+<td>#55</td>
+<td>Repo hygiene — <code>schema/tests_tmp/</code> cleanup + Windows path tripwires</td>
+</tr>
+</tbody>
+</table>
+<h2 id="phase-1-belief-workspace-reflector">Phase 1 — Belief workspace + Reflector<a class="headerlink" href="#phase-1-belief-workspace-reflector" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/ddawnlll/hephaestus/issues?q=label%3Aphase-1-workspace">Issues #56–#60</a></p>
+<h3 id="relies_on-the-load-bearing-change"><code>relies_on</code> — the load-bearing change<a class="headerlink" href="#relies_on-the-load-bearing-change" title="Permanent link">&para;</a></h3>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># schema/hypothesis.schema.json (excerpt)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nt">hypothesis</span><span class="p">:</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">H-042</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">statement</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Volatility</span><span class="nv"> </span><span class="s">regime</span><span class="nv"> </span><span class="s">shift</span><span class="nv"> </span><span class="s">at</span><span class="nv"> </span><span class="s">14:30</span><span class="nv"> </span><span class="s">UTC</span><span class="nv"> </span><span class="s">predicts</span><span class="nv"> </span><span class="s">15m</span><span class="nv"> </span><span class="s">direction&quot;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">relies_on</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">B-007</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">B-003</span><span class="p p-Indicator">]</span><span class="w">   </span><span class="c1"># ← required, may be empty []</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">metric</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sharpe</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.4</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">direction</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&gt;=&quot;</span>
+</span></code></pre></div>
+<p>When H-042 FAILs, blame propagates upward: both B-007 and B-003 get the FAIL appended
+to <code>blamed_by[]</code> and lose confidence. <strong>Three failures on B-X → B-X becomes <code>suspect</code>.</strong>
+This is the mechanism that produces "grow the dataset" without ever enumerating axes in
+config — the system finds its own bottleneck.</p>
+<h3 id="beliefs-workspace">Beliefs workspace<a class="headerlink" href="#beliefs-workspace" title="Permanent link">&para;</a></h3>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># schema/beliefs.schema.json</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">beliefs</span><span class="p">:</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">B-007</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nt">statement</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Current</span><span class="nv"> </span><span class="s">dataset</span><span class="nv"> </span><span class="s">has</span><span class="nv"> </span><span class="s">sufficient</span><span class="nv"> </span><span class="s">statistical</span><span class="nv"> </span><span class="s">power</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">sharpe&gt;=1.4&quot;</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nt">confidence</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.35</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="nt">blamed_by</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">H-012</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">H-015</span><span class="p p-Indicator">]</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="nt">tested_directly</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="nt">suspect</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="nt">kill_criterion</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Sharpe</span><span class="nv"> </span><span class="s">&lt;</span><span class="nv"> </span><span class="s">1.0</span><span class="nv"> </span><span class="s">across</span><span class="nv"> </span><span class="s">200+</span><span class="nv"> </span><span class="s">hypotheses</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">any</span><span class="nv"> </span><span class="s">window&quot;</span>
+</span></code></pre></div>
+<p>Hard rules:</p>
+<ul>
+<li><strong>Cap 12 active beliefs.</strong> Capacity limit is the mechanism, not a nicety.</li>
+<li><strong>Every belief MUST carry <code>kill_criterion</code></strong> (falsifiability contract).</li>
+<li><strong>Reflector is the single writer</strong> — same principle as <code>objections.jsonl</code>.</li>
+<li><strong>Eviction requires evidence</strong> — symmetric with entry.</li>
+</ul>
+<h3 id="reflector">Reflector<a class="headerlink" href="#reflector" title="Permanent link">&para;</a></h3>
+<p><code>templates/SOUL.reflector.md</code> + <code>templates/scripts/reflector-dispatch.sh</code>.</p>
+<p>Three questions per run:</p>
+<ol>
+<li><strong>Shared-assumption extraction</strong> — intersection of recent failures → frame-shift candidates</li>
+<li><strong>Relaxation probe</strong> — "which single constraint binds?" → constraint-questioning ideas</li>
+<li><strong>Perspective tour</strong> — "how would X read this?" → cheap lateral jumps</li>
+</ol>
+<p>Hard rules:</p>
+<ul>
+<li>Decorrelated model family from orchestrator (else self-grading theater)</li>
+<li>Runs offline (idle / plateau), like human sleep consolidation</li>
+<li>May mark at most ONE belief <code>suspect</code> per run</li>
+<li>Writes ONLY <code>beliefs.yaml</code> and <code>narrative.md</code> — never code, never hypotheses</li>
+</ul>
+<h3 id="stagnation-momentum-signals">Stagnation / momentum signals<a class="headerlink" href="#stagnation-momentum-signals" title="Permanent link">&para;</a></h3>
+<p><code>state.schema.json</code> v2 adds <code>stagnation</code> (info-gain per tick) and <code>momentum</code> (merge
+streak). SOUL hard rule: while a <code>suspect</code> belief exists, <strong>no new hypotheses inside
+that frame</strong> — either propose a belief-test or file an objection to T3.</p>
+<h2 id="phase-2-containment">Phase 2 — Containment<a class="headerlink" href="#phase-2-containment" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/ddawnlll/hephaestus/issues?q=label%3Aphase-2-containment">Issues #61–#64</a></p>
+<p>The new v0.5 system creates deadlock modes that did not exist in v0.4. Phase 2
+contains them:</p>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Antidote</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>#61</td>
+<td><strong>Authority matrix</strong> — terminal referee for every role pair (Reflector↔Red Team → T3)</td>
+</tr>
+<tr>
+<td>#62</td>
+<td><strong>Suspect TTL</strong> — <code>suspect</code> expires after 5 ticks; Reflector must re-justify</td>
+</tr>
+<tr>
+<td>#63</td>
+<td><strong>Belief min-residency</strong> — M=3 ticks before eviction allowed; eviction requires evidence</td>
+</tr>
+<tr>
+<td>#64</td>
+<td><strong>Frame-shift cooldown + ratchet hysteresis</strong> — no suspect-marking for K=8 ticks after a frame shift</td>
+</tr>
+</tbody>
+</table>
+<p>Critical: <strong>the curiosity exemption</strong> (per #30, from v0.4) is reinforced — a Red Team
+block prevents MERGE of a result, never the RUN of the experiment. Gates constrain
+<em>claims</em>, never <em>curiosity</em>.</p>
+<h2 id="phase-3-idea-channels">Phase 3 — Idea channels<a class="headerlink" href="#phase-3-idea-channels" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/ddawnlll/hephaestus/issues?q=label%3Aphase-3-channels">Issues #65–#68</a></p>
+<p>Four channels, all independently feature-flagged, default disabled, candidate-only
+output. Disabled = zero spend, zero artifacts.</p>
+<h3 id="analogy-channel-65">Analogy channel (#65)<a class="headerlink" href="#analogy-channel-65" title="Permanent link">&para;</a></h3>
+<p><code>templates/scripts/analogy-channel.py</code> — <code>~/.hermes/lessons.jsonl</code> cross-project corpus
+with <strong>dual writing</strong>: every lesson stored twice — concrete
+("AlphaForge dataset was too small") + denominalized abstract
+("the resource shared by all local mutations was the unquestioned bottleneck").
+Domain nouns → role variables. Retrieval runs on the abstract form only.</p>
+<p><strong>Casting sessions:</strong> when stuck, force-fit the top-5 abstract lessons from OTHER
+projects: "if this lesson applied here, what would it say?" Most casts fail; survivors
+become hypotheses via the curiosity budget. Tagged <code>provenance: analogy</code>.</p>
+<h3 id="random-leap-channel-66">Random-leap channel (#66)<a class="headerlink" href="#random-leap-channel-66" title="Permanent link">&para;</a></h3>
+<p><code>templates/scripts/dream-channel.py</code> — three mechanisms:</p>
+<ol>
+<li><strong>Bisociation replay</strong> — sample ledger-entry PAIRS at MID embedding distance
+   (Koestler's intersection of two frames; too close = trivial, too far = noise).</li>
+<li><strong>Dream mode</strong> — on idle ticks, generate deliberately absurd recombinations
+   (constraint inversion: "what if the goal were reversed?"). Generation and filtering
+   are <strong>temporally separated</strong> — judgment happens at the NEXT Reflector consolidation
+   (sleep, then morning filter).</li>
+<li><strong>External entropy</strong> — one random arXiv/HN item per day injected into Explorer
+   context. Zettelkasten serendipity.</li>
+</ol>
+<h3 id="affect-channel-67">Affect channel (#67)<a class="headerlink" href="#affect-channel-67" title="Permanent link">&para;</a></h3>
+<p><code>templates/scripts/calibration-channel.py</code> — copy affect's FUNCTION, not its feeling:</p>
+<ol>
+<li><strong>Calibration score = mechanical shame.</strong> Every role attaches a probability to every
+   verdict. Brier scores in <code>$LEDGER/calibration.json</code>. Confidently-wrong is costly.
+   <strong>CRITICAL:</strong> score CALIBRATION, never agreement — otherwise the Red Team stops
+   blocking to protect its score and the system turns sycophantic.</li>
+<li><strong>Mood as parameter modulation, never decision gating:</strong> momentum/frustration
+   scalars modulate hypothesis ambition and exploration ratio. Merge streak → raise
+   ambition; losing streak → small-wins mode to recalibrate.</li>
+<li><strong>Boredom → rotation:</strong> low info-gain triggers switching hypothesis FAMILY
+   (interleaving/spacing effect), not just frame shifts.</li>
+</ol>
+<h3 id="context-channel-68">Context channel (#68)<a class="headerlink" href="#context-channel-68" title="Permanent link">&para;</a></h3>
+<p><code>templates/scripts/whisper-channel.py</code> — three mechanisms:</p>
+<ol>
+<li><strong>Whisper inbox</strong> (<code>$LEDGER/whispers/</code>) — highest-leverage. Unstructured one-line
+   human impressions. No format, no justification, 30 seconds. Reflector reads whispers
+   as WEAK evidence. Human intuition becomes an input stream instead of a bottleneck gate.</li>
+<li><strong>Morning briefing:</strong> adapter-defined external feeds (alphaforge: vol regime, macro
+   calendar; org: commit/PR discussion digest) summarized daily into workspace CONTEXT,
+   never commands.</li>
+<li><strong>Regime detector:</strong> deterministic statistical nose — correlation breaks, vol
+   clustering.</li>
+</ol>
+<p><strong>Security invariant (non-negotiable):</strong> every external stream must EARN workspace
+entry through the capacity cap + competitive entry. Nothing external writes to
+<code>beliefs.yaml</code> directly. Widening the sensorium widens the prompt-injection surface;
+the workspace bottleneck IS the defense.</p>
+<h2 id="phase-4-provenance-measurement">Phase 4 — Provenance + measurement<a class="headerlink" href="#phase-4-provenance-measurement" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/ddawnlll/hephaestus/issues/69">Issue #69</a></p>
+<p>Every merged improvement carries a <code>provenance</code> tag:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">provenance</span><span class="p">:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">elimination</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">analogy</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">replay</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">whisper</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">external</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">relaxation</span>
+</span></code></pre></div>
+<p>Tick reports aggregate per-channel hit rates (ideas generated → hypotheses dispatched →
+merges). After ~6 months of provenance data, the system itself answers
+"which channel produces merges" and investment shifts accordingly.</p>
+<p>A merge without <code>provenance</code> fails schema validation.</p>
+<h2 id="phase-5-runtime-reliability">Phase 5 — Runtime reliability<a class="headerlink" href="#phase-5-runtime-reliability" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/ddawnlll/hephaestus/issues?q=is%3Aissue+kaizen-engine">Issues #70–#72</a></p>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>#70</td>
+<td>Feature flags + Reflector shadow rollout (default disabled, gradual rollout)</td>
+</tr>
+<tr>
+<td>#71</td>
+<td>Tick transaction journal + crash recovery/idempotency (durable, atomic)</td>
+</tr>
+<tr>
+<td>#72</td>
+<td>End-to-end adversarial replay/canary suite (11 scenarios, 19 assertions)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tick-transaction-journal">Tick transaction journal<a class="headerlink" href="#tick-transaction-journal" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># templates/scripts/tick-journal.py</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="p">{</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  <span class="s2">&quot;tick_id&quot;</span><span class="p">:</span> <span class="s2">&quot;uuid&quot;</span><span class="p">,</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  <span class="s2">&quot;run_id&quot;</span><span class="p">:</span> <span class="s2">&quot;uuid&quot;</span><span class="p">,</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>  <span class="s2">&quot;phase&quot;</span><span class="p">:</span> <span class="s2">&quot;dispatch | reflect | merge | ...&quot;</span><span class="p">,</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;pending | running | completed | failed&quot;</span><span class="p">,</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>  <span class="s2">&quot;started_at&quot;</span><span class="p">:</span> <span class="s2">&quot;timestamp&quot;</span><span class="p">,</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>  <span class="s2">&quot;completed_at&quot;</span><span class="p">:</span> <span class="s2">&quot;timestamp&quot;</span><span class="p">,</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>  <span class="s2">&quot;side_effects&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;worker:H-042&quot;</span><span class="p">,</span> <span class="s2">&quot;merge:PR-77&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>Invariant: <code>already_applied(run_id, operation) → skip</code>. Proves idempotent across worker
+dispatch, blame propagation, merges, lessons, provenance, spend accounting, channel
+output, and reflector consolidation.</p>
+<h3 id="canary-suite">Canary suite<a class="headerlink" href="#canary-suite" title="Permanent link">&para;</a></h3>
+<p>11 end-to-end scenarios:</p>
+<ol>
+<li>Belief capacity 12/13 (cap enforcement)</li>
+<li>TTL expiry (suspect expires correctly)</li>
+<li>Direct blame (3 failures on B-X → suspect)</li>
+<li>Authority coverage failure (role pair missing → FAIL closed)</li>
+<li>Ratchet restart (durable across process death)</li>
+<li>Prompt injection isolation (whisper cannot mutate beliefs)</li>
+<li>Disabled channel zero side effects</li>
+<li>Deadlock recovery (suspect + Red Team block → experiment still runs)</li>
+<li>Eviction (evidence-backed, audit logged)</li>
+<li>Reflector shadow isolation (proposals file, real beliefs untouched)</li>
+<li>Duplicate tick idempotency + crash recovery</li>
+</ol>
+<h2 id="migration-from-v04">Migration from v0.4<a class="headerlink" href="#migration-from-v04" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bash<span class="w"> </span>migrate-ledger.sh<span class="w"> </span>.alphaforge/orchestrator/state.json<span class="w"> </span>--backup
+</span></code></pre></div>
+<p><code>migrate-ledger.sh</code> converts v1 hypothesis files (empty <code>relies_on</code>) into v0.5 schema.
+The <code>relies_on</code> field is required (may be empty <code>[]</code>) on all new hypotheses from this
+release forward.</p>
+<h2 id="whats-next">What's next<a class="headerlink" href="#whats-next" title="Permanent link">&para;</a></h2>
+<p>v0.6 candidates:</p>
+<ul>
+<li>Channel dispatch hardening (deterministic pre-commit + cron-side enforcement)</li>
+<li>Reflector active-mode rollout (default shadow until readiness passes for 30 consecutive
+  ticks across all deployed projects)</li>
+<li>Cross-project lessons.jsonl consolidation endpoint</li>
+<li>Quantitative hit-rate analysis from provenance data</li>
+</ul>
+<h2 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://github.com/ddawnlll/hephaestus/blob/v0.5.0-kaizen/CHANGELOG.md">CHANGELOG.md</a></li>
+<li><a href="https://github.com/ddawnlll/hephaestus/pull/73">PR #73</a></li>
+<li><a href="https://github.com/ddawnlll/hephaestus/releases/tag/v0.5.0-kaizen">Release v0.5.0-kaizen</a></li>
+<li><a href="https://github.com/ddawnlll/hephaestus/blob/v0.5.0-kaizen/.praxis/runs/v05-full-evidence.jsonl">Praxis evidence bundle</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../architecture/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Architecture">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Architecture
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../adapters/" class="md-footer__link md-footer__link--next" aria-label="Next: Adapters">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Adapters
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/ddawnlll/hephaestus" target="_blank" rel="noopener" title="GitHub Repository" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

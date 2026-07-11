@@ -1,0 +1,31 @@
+/* Hephaestus docs theme overrides */
+
+:root {
+  --md-admonition-icon--admonition-success: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>');
+}
+
+/* Mermaid diagram backgrounds */
+.mermaid {
+  background: var(--md-code-bg-color);
+  border-radius: 4px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+/* Custom heading anchor hover */
+.md-typeset h2:hover .headerlink,
+.md-typeset h3:hover .headerlink,
+.md-typeset h4:hover .headerlink {
+  opacity: 1;
+}
+
+/* Code block polish */
+.md-typeset code {
+  border-radius: 4px;
+}
+
+/* Admonition for "do/don't" callouts */
+.md-typeset .admonition.do,
+.md-typeset .admonition.dont {
+  border-radius: 6px;
+}
