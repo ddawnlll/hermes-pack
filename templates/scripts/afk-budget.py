@@ -86,7 +86,7 @@ def check_budget(
     }
 
 
-def reset(state: BudgetState) -> BudgetState:
+def reset(_: BudgetState) -> BudgetState:
     """Reset the budget (called at the start of a new AFK session)."""
     return BudgetState()
 
