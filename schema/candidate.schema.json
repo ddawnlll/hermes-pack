@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "$id": "https://hephaestus.dev/schema/candidate.schema.json",
+  "title": "Hephaestus v0.6 Candidate Manifest",
+  "description": "Manifest for a v0.6 candidate — the atomic unit of mutation in the Promotion Engine (BE-2 #85). All promotion decisions read this manifest. Defines the lifecycle state machine and the fields required to evaluate preconditions (effect_class, base_state_current, merge_policy, rollback_pointer, observation_window).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "source_hypothesis",
+    "workspace",
+    "base_state",
+    "effect_class",
+    "expected_delta",
+    "evidence",
+    "promotion_preconditions",
+    "shadow_plan",
+    "canary_plan",
+    "rollback_pointer",
+    "observation_window",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "description": "Schema version number. Bumped on breaking changes per README schema-bump procedure."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^cand_[a-z0-9_]{4,}$",
+      "description": "Unique candidate id. Format: cand_<lowercase_slug>."
+    },
+    "source_hypothesis": {
+      "type": "string",
+      "description": "Hypothesis id (from db.hypotheses / templates/hypothesis.yaml) that motivated this candidate.",
+      "pattern": "^hyp_[a-z0-9_]{4,}$"
+    },
+    "workspace": {
+      "type": "string",
+      "description": "Workspace in which the candidate was authored. Either 'beliefs' (Orchestrator-managed) or a project-specific workspace from adapters/*/project.yaml."
+    },
+    "base_state": {
+      "type": "object",
+      "description": "Snapshot of the state the candidate is built against. The Promotion Engine's base_state_current precondition (A-5 #80) verifies that base_state.hash equals current_active_state.hash at promotion time. If they differ, the candidate transitions to REBASE_REQUIRED.",
+      "required": ["hash", "captured_at_tick"],
+      "properties": {
+        "hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 hash of the canonical base state (per asset_type, see A-3 #78)."
+        },
+        "captured_at_tick": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Tick id at which the base was captured."
+        }
+      }
+    },
+    "effect_class": {
+      "type": "string",
+      "enum": ["reversible_internal", "compensable_external", "irreversible_external"],
+      "description": "From A-1 (#76). irreversible_external is human-only; human_always remains true for this class. compensable_external requires compensation_plan + standing_policy to be auto-promotable under AFK."
+    },
+    "compensation_plan": {
+      "type": "object",
+      "description": "REQUIRED iff effect_class == compensable_external. Records how the promotion can be undone in practice.",
+      "required": ["compensator", "steps", "max_window_minutes"],
+      "properties": {
+        "compensator": { "type": "string", "description": "Role or component name that owns the compensation." },
+        "steps": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "max_window_minutes": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "standing_policy": {
+      "type": "string",
+      "format": "uri-reference",
+      "description": "REQUIRED iff effect_class != reversible_internal. Adapter-scoped policy reference, non-empty. Format: policy://<adapter>/<policy_name>."
+    },
+    "human_always": {
+      "type": "boolean",
+      "description": "REQUIRED and MUST be true iff effect_class == irreversible_external. Preserved from pre-v0.6; this contract does NOT weaken it."
+    },
+    "expected_delta": {
+      "type": "object",
+      "description": "Self-description of what this candidate is expected to change. Used by the Promotion Engine and T4 disposition to estimate risk.",
+      "required": ["scope", "magnitude"],
+      "properties": {
+        "scope": { "type": "string", "description": "Free-form scope description (e.g. 'beliefs.yaml: beliefs[3..5]')." },
+        "magnitude": { "type": "string", "enum": ["trivial", "small", "medium", "large"] }
+      }
+    },
+    "evidence": {
+      "type": "string",
+      "description": "Free-form evidence supporting the candidate. Required for EVICT intents under #63 unless actor is human (per A-2 #77 exception)."
+    },
+    "promotion_preconditions": {
+      "type": "object",
+      "description": "From A-5 (#80). base_state_current MUST be true at promotion time; merge_policy gates unattended execution; kill/pause/freeze MUST be clear.",
+      "required": ["base_state_current", "merge_policy", "kill_pause_freeze_clear"],
+      "properties": {
+        "base_state_current": {
+          "type": "boolean",
+          "description": "Engine verifies candidate.base_state.hash == current_active_state.hash at promotion time. If false, candidate -> REBASE_REQUIRED."
+        },
+        "merge_policy": {
+          "type": "string",
+          "enum": ["pr_only", "pr_gated_auto"],
+          "default": "pr_only",
+          "description": "From A-3 (#78). pr_gated_auto requires effect_class != irreversible_external AND a non-empty compensation_plan for compensable_external candidates."
+        },
+        "kill_pause_freeze_clear": {
+          "type": "boolean",
+          "description": "From A-4 (#79). Engine reads templates/control.yaml:mode AND db.control_state:mode; OR'd, then negated. True means neither surface reports killed/paused/frozen."
+        }
+      }
+    },
+    "shadow_plan": {
+      "type": "object",
+      "description": "How this candidate will be SHADOWING'd before promotion. SHADOWING runs the candidate's effect in an isolated environment; fail returns to ROLLED_BACK or DISCARDED.",
+      "required": ["environment", "duration_ticks"],
+      "properties": {
+        "environment": { "type": "string", "enum": ["isolated_workspace", "sandbox", "fixture"] },
+        "duration_ticks": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "canary_plan": {
+      "type": "object",
+      "description": "How the candidate is CANARY'd after SHADOWING but before full PROMOTED. Fail returns to ROLLED_BACK.",
+      "required": ["metric", "threshold"],
+      "properties": {
+        "metric": { "type": "string", "description": "Metric name observed during canary (e.g. 'eval_latency_p99_ms')." },
+        "threshold": { "type": ["number", "string"], "description": "Pass threshold (interpretation depends on metric)." },
+        "duration_ticks": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "rollback_pointer": {
+      "type": "object",
+      "description": "From BE-3 (#86). Pointer to the snapshot manifest captured before promotion; enables atomic rollback. Must be present before any state transition out of PROPOSED.",
+      "required": ["storage", "key"],
+      "properties": {
+        "storage": { "type": "string", "enum": ["s3", "fs"], "description": "From DL-3 (#96). s3 = S3-compatible (MinIO local), fs = filesystem." },
+        "bucket_or_root": { "type": "string" },
+        "key": { "type": "string", "description": "Format: snapshots/<candidate_id>/<tick_id>.json" },
+        "checksum": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "captured_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "observation_window": {
+      "type": "object",
+      "description": "After PROMOTED, the candidate enters OBSERVING. If a regression is detected within window_ticks, it transitions to ROLLED_BACK. If STABLE, it transitions to RETAINED.",
+      "required": ["window_ticks"],
+      "properties": {
+        "window_ticks": { "type": "integer", "minimum": 1 },
+        "regression_signals": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Metric names monitored for regression."
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PROPOSED",
+        "MATERIALIZING",
+        "MATERIALIZED",
+        "VERIFYING",
+        "SHADOWING",
+        "CANARY",
+        "PROMOTED",
+        "OBSERVING",
+        "RETAINED",
+        "ROLLED_BACK",
+        "DISCARDED",
+        "REBASE_REQUIRED",
+        "DEAD"
+      ],
+      "description": "Current lifecycle state. PROPOSED -> MATERIALIZING -> MATERIALIZED -> VERIFYING -> (DISCARDED | SHADOWING) -> (DISCARDED|ROLLED_BACK | CANARY) -> (ROLLED_BACK | PROMOTED) -> OBSERVING -> (ROLLED_BACK | RETAINED). REBASE_REQUIRED (A-5 #80) is reachable from any pre-PROMOTED state. DEAD is terminal failure requiring re-author."
+    },
+    "state_history": {
+      "type": "array",
+      "description": "Append-only log of state transitions. Each entry: {from, to, tick, actor, reason}.",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "tick"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "tick": { "type": "integer", "minimum": 0 },
+          "actor": { "type": "string", "description": "Role that triggered the transition." },
+          "reason": { "type": "string" }
+        }
+      },
+      "default": []
+    },
+    "merge_policy": {
+      "type": "string",
+      "enum": ["pr_only", "pr_gated_auto"],
+      "description": "Per-candidate override of the asset_type's default merge_policy (see A-3 #78). Set to pr_gated_auto only for AFK-eligible candidates."
+    }
+  },
+  "allOf": [
+    {
+      "description": "If effect_class == irreversible_external, human_always MUST be true.",
+      "if": {
+        "properties": { "effect_class": { "const": "irreversible_external" } },
+        "required": ["effect_class"]
+      },
+      "then": {
+        "required": ["human_always"],
+        "properties": {
+          "human_always": { "const": true }
+        }
+      }
+    },
+    {
+      "description": "If effect_class == compensable_external, compensation_plan and standing_policy are REQUIRED.",
+      "if": {
+        "properties": { "effect_class": { "const": "compensable_external" } },
+        "required": ["effect_class"]
+      },
+      "then": {
+        "required": ["compensation_plan", "standing_policy"]
+      }
+    },
+    {
+      "description": "merge_policy == pr_gated_auto requires effect_class != irreversible_external.",
+      "if": {
+        "properties": { "merge_policy": { "const": "pr_gated_auto" } },
+        "required": ["merge_policy"]
+      },
+      "then": {
+        "properties": {
+          "effect_class": { "not": { "const": "irreversible_external" } }
+        }
+      }
+    }
+  ]
+}
