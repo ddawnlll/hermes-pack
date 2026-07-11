@@ -1,0 +1,9 @@
+# Profile: arbiter — terminal referee. Premium model, decorrelated from both orchestrator and challenger.
+provider: __HERMES_ARBITER_PROVIDER__
+model: __HERMES_ARBITER_MODEL__
+
+delegation:
+  orchestrator_enabled: false
+
+goals:
+  max_turns: 3

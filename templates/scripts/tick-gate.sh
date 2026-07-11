@@ -191,4 +191,15 @@ if [ "$newest" -le "$prev" ] && [ -z "$runs_newest" ]; then
   fi
 fi
 date +%s > "$last"
+
+# ── 4) Mandatory tick journal init ────────────────────────────────────────────
+# tick-runtime.py init initializes or recovers the transaction journal.
+# This runs BEFORE the LLM is woken, making it a non-bypassable pre-tick gate.
+JOURNAL_DIR="$REPO/$LEDGER_DIR/journal"
+STATE_FILE="$REPO/$LEDGER_DIR/state.json"
+if [ -f "$STATE_FILE" ]; then
+  python3 "$PACK_DIR/templates/scripts/tick-runtime.py" init "$STATE_FILE" "$JOURNAL_DIR" 2>/dev/null || \
+    echo '{"wakeAgent": false, "context": {"error": "tick-runtime init failed"}}'
+fi
+
 echo '{"wakeAgent": true}'

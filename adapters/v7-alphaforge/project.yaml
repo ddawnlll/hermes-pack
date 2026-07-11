@@ -37,6 +37,10 @@ hermes:
       - "gpt-4o"                            # premium (DIFFERENT from orchestrator)
       - "claude-sonnet-4-20250514"          # mid fallback
       - "ollama/llama3"                     # local fallback
+    reflector_model: "openrouter/deepseek/deepseek-chat"
+    reflector_chain:
+      - "deepseek/deepseek-chat"            # DIFFERENT from orchestrator (claude)
+      - "ollama/llama3"                     # local fallback
 
 paths:
   ledger: ".alphaforge/orchestrator"

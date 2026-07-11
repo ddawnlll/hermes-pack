@@ -67,18 +67,47 @@ After Praxis PASS:
   - human_available = false (AFK) → **PARK** + safe-default **HOLD**. Continue with other hypotheses. No global stall.
   - t4_budget <= 0 → HOLD (budget exhausted)
 
+### Phase 4: Channel Dispatch (v0.5 — Deterministic)
 
-### Phase 4: Memory & Merge
+Run only when no workers are active and the system is in idle/consolidate phase.
+Use the deterministic dispatcher — do NOT assemble channel commands manually.
+
+1. **Tick start** — Initialize or recover the transaction journal:
+   ```bash
+   python3 templates/scripts/tick-runtime.py init <ledger>/state.json <ledger>/journal
+   ```
+
+2. **Reflector dispatch** — Run `reflector-dispatch.sh` (checks feature flags + readiness):
+   - Shadow mode: writes proposals to `reflector_proposals.yaml`
+   - Active mode: blocked unless readiness artifact is valid
+
+3. **Channel dispatch** — For each enabled channel, run the deterministic dispatcher:
+   ```bash
+   python3 templates/scripts/channel-dispatch.py <state_file> <journal_dir> <channel>
+   ```
+   This single command: inspects state, checks flag+budget, derives operation key,
+   consults journal, executes channel, records provenance, records spend, commits journal.
+
+4. **Tick end** — Complete the tick:
+   ```bash
+   python3 templates/scripts/tick-runtime.py tick-end <ledger>/state.json <ledger>/journal
+   ```
+
+All channel output is CANDIDATE material only. Normal verification and authority gates remain mandatory. Channel output never bypasses hypothesis validation.
+
+### Phase 5: Memory & Merge
 - **Praxis PASS + gate verdict →** write verified facts to memory
 - **Workers CANNOT write memory** — only orchestrator after verification
 - **Merge policy:** PR-only, never direct
 
-### Phase 5: Dispatch New Work
+### Phase 6: Dispatch New Work
 If capacity available:
 1. **Check scar-tissue memory first** — query Hindsight for `type: refuted_hypothesis` records with similar keywords. Do NOT re-dispatch a hypothesis that has been previously refuted (issue #23).
-2. Select highest-priority hypothesis
-3. Create Context Capsule (allowed paths, required context, acceptance criteria)
-4. Dispatch worker on isolated branch
+2. **Check suspect beliefs** — run `blame-propagation.py check` to see if dependencies are blocked.
+3. Select highest-priority hypothesis
+4. Create Context Capsule (allowed paths, required context, acceptance criteria)
+5. Dispatch worker on isolated branch
+6. **Record provenanc** — `provenance-track.py record` for every dispatched hypothesis.
 
 ## Hard Rules
 - **Praxis before T1.** No LLM gate runs before deterministic verification.
@@ -87,3 +116,6 @@ If capacity available:
 - **Challenger is read-only.** Read-only profile, no write tools.
 - **Merge policy:** `__HERMES_MERGE_POLICY__` — always PR-only.
 - **Forbidden paths:** Never touch `__HERMES_FORBIDDEN_PATHS_YAML__`
+- **Channel output is candidate only.** Never direct to canonical beliefs.
+- **Disabled channel = zero spend, zero artifacts.**
+- **Stagnation/momentum are deterministic signals.** They modulate attention but do NOT independently authorize decisions.

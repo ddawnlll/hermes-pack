@@ -1,0 +1,14 @@
+# Profile: reflector — consolidation agent, shadow mode by default.
+# No worker delegation, no code-writing authority, bounded turns.
+provider: __HERMES_REFLECTOR_PROVIDER__
+model: __HERMES_REFLECTOR_MODEL__
+
+delegation:
+  orchestrator_enabled: false
+
+goals:
+  max_turns: 3
+
+tools:
+  enabled: false
+  allowed: []

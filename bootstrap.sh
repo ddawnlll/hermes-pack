@@ -41,6 +41,25 @@ DF_MERGE="pr_only"
 DF_MAX_PARALLEL=3
 DF_MAX_SPEND=25
 
+# Challenger / Arbiter defaults
+DF_CHALLENGER_MODEL="openrouter/mistralai/mistral-small"
+DF_CHALLENGER_CHAIN_0="mistralai/mistral-small"
+DF_CHALLENGER_CHAIN_1="ollama/llama3"
+DF_CHALLENGER_CHAIN_2=""
+DF_ARBITER_MODEL="anthropic/claude-sonnet-4-20250514"
+DF_ARBITER_CHAIN_0="claude-sonnet-4-20250514"
+DF_ARBITER_CHAIN_1="deepseek/deepseek-chat"
+DF_ARBITER_CHAIN_2="ollama/llama3"
+DF_PROFILE_CHALLENGER="challenger"
+DF_PROFILE_ARBITER="arbiter"
+
+# Reflector defaults
+DF_REFLECTOR_MODEL="openrouter/deepseek/deepseek-chat"
+DF_REFLECTOR_CHAIN_0="deepseek/deepseek-chat"
+DF_REFLECTOR_CHAIN_1="ollama/llama3"
+DF_REFLECTOR_CHAIN_2=""
+DF_PROFILE_REFLECTOR="reflector"
+
 # ----------------------------- helpers --------------------------------------
 say()  { printf '\033[1;32m[hermes-setup]\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[hermes-setup] WARN:\033[0m %s\n' "$*"; }
@@ -111,6 +130,64 @@ load_adapter() {
   MERGE=$(extract_str "$file" "merge_policy" "$DF_MERGE")
   MAX_PARALLEL=$(extract_str "$file" "max_parallel_workers" "$DF_MAX_PARALLEL")
   MAX_SPEND=$(extract_str "$file" "max_llm_spend_per_day_usd" "$DF_MAX_SPEND")
+
+  # ── Challenger / Arbiter extraction ───────────────────────────────────────
+  CHALLENGER_MODEL=$(extract_str "$file" "challenger_model" "$DF_CHALLENGER_MODEL")
+  # If challenger field exists (separate provider), use it; else infer from model
+  local chal_prov
+  chal_prov=$(extract_str "$file" "challenger" "")
+  if [ -n "$chal_prov" ]; then
+    CHALLENGER_PROVIDER="$chal_prov"
+  else
+    CHALLENGER_PROVIDER="${CHALLENGER_MODEL%%/*}"
+  fi
+  ARBITER_MODEL=$(extract_str "$file" "arbiter_model" "$DF_ARBITER_MODEL")
+  local arb_prov
+  arb_prov=$(extract_str "$file" "arbiter" "")
+  if [ -n "$arb_prov" ]; then
+    ARBITER_PROVIDER="$arb_prov"
+  else
+    ARBITER_PROVIDER="${ARBITER_MODEL%%/*}"
+  fi
+  PROFILE_CHALLENGER=$(extract_str "$file" "profile_challenger" "$DF_PROFILE_CHALLENGER")
+  PROFILE_ARBITER=$(extract_str "$file" "profile_arbiter" "$DF_PROFILE_ARBITER")
+
+  # ── Chain extraction (for litellm-config.yaml) ────────────────────────────
+  compute_chain_vars() {
+    local prefix="$1"  # e.g. CHALLENGER or ARBITER
+    local raw_chain
+    raw_chain=$(extract_yaml_list "$file" "${prefix,,}_chain" 2>/dev/null || echo "")
+    if [ -z "$raw_chain" ]; then
+      # Use defaults, injected via eval
+      return
+    fi
+    # Parse chain items into numbered variables
+    local i=0
+    while IFS= read -r line; do
+      local item
+      item=$(echo "$line" | sed 's/^  - //;s/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"')
+      [ -n "$item" ] && eval "${prefix}_CHAIN_${i}=\"$item\""
+      i=$((i + 1))
+    done <<< "$raw_chain"
+    # Fill remaining slots with empty string
+    while [ $i -lt 3 ]; do
+      eval "${prefix}_CHAIN_${i}=\"\""
+      i=$((i + 1))
+    done
+  }
+  compute_chain_vars "CHALLENGER"
+  compute_chain_vars "ARBITER"
+
+  # ── Reflector extraction ─────────────────────────────────────────────
+  REFLECTOR_MODEL=$(extract_str "$file" "reflector_model" "$DF_REFLECTOR_MODEL")
+  local ref_prov
+  ref_prov=$(extract_str "$file" "reflector" "")
+  if [ -n "$ref_prov" ]; then
+    REFLECTOR_PROVIDER="$ref_prov"
+  else
+    REFLECTOR_PROVIDER="${REFLECTOR_MODEL%%/*}"
+  fi
+  PROFILE_REFLECTOR=$(extract_str "$file" "profile_reflector" "$DF_PROFILE_REFLECTOR")
 
   local allowed
   allowed=$(extract_yaml_list "$file" "allowed")
@@ -195,6 +272,24 @@ else
   MERGE="$DF_MERGE"
   MAX_PARALLEL="$DF_MAX_PARALLEL"
   MAX_SPEND="$DF_MAX_SPEND"
+  CHALLENGER_MODEL="$DF_CHALLENGER_MODEL"
+  CHALLENGER_PROVIDER="${CHALLENGER_MODEL%%/*}"
+  ARBITER_MODEL="$DF_ARBITER_MODEL"
+  ARBITER_PROVIDER="${ARBITER_MODEL%%/*}"
+  PROFILE_CHALLENGER="$DF_PROFILE_CHALLENGER"
+  PROFILE_ARBITER="$DF_PROFILE_ARBITER"
+  CHALLENGER_CHAIN_0="$DF_CHALLENGER_CHAIN_0"
+  CHALLENGER_CHAIN_1="$DF_CHALLENGER_CHAIN_1"
+  CHALLENGER_CHAIN_2="$DF_CHALLENGER_CHAIN_2"
+  ARBITER_CHAIN_0="$DF_ARBITER_CHAIN_0"
+  ARBITER_CHAIN_1="$DF_ARBITER_CHAIN_1"
+  ARBITER_CHAIN_2="$DF_ARBITER_CHAIN_2"
+  REFLECTOR_MODEL="$DF_REFLECTOR_MODEL"
+  REFLECTOR_PROVIDER="${REFLECTOR_MODEL%%/*}"
+  PROFILE_REFLECTOR="$DF_PROFILE_REFLECTOR"
+  REFLECTOR_CHAIN_0="$DF_REFLECTOR_CHAIN_0"
+  REFLECTOR_CHAIN_1="$DF_REFLECTOR_CHAIN_1"
+  REFLECTOR_CHAIN_2="$DF_REFLECTOR_CHAIN_2"
 fi
 
 say "project: $PROJECT_NAME"
@@ -226,6 +321,22 @@ sub() {
       -e "s|__HERMES_MAX_PARALLEL_WORKERS__|$MAX_PARALLEL|g" \
       -e "s|__HERMES_MAX_SPEND_PER_DAY__|$MAX_SPEND|g" \
       -e "s|__HERMES_REPO_DIR__|$REPO_DIR|g" \
+      -e "s|__HERMES_CHALLENGER_PROVIDER__|${CHALLENGER_PROVIDER:-openrouter}|g" \
+      -e "s|__HERMES_CHALLENGER_MODEL__|${CHALLENGER_MODEL:-mistralai/mistral-small}|g" \
+      -e "s|__HERMES_CHALLENGER_CHAIN_0__|${CHALLENGER_CHAIN_0:-mistralai/mistral-small}|g" \
+      -e "s|__HERMES_CHALLENGER_CHAIN_1__|${CHALLENGER_CHAIN_1:-ollama/llama3}|g" \
+      -e "s|__HERMES_CHALLENGER_CHAIN_2__|${CHALLENGER_CHAIN_2:-}|g" \
+      -e "s|__HERMES_ARBITER_PROVIDER__|${ARBITER_PROVIDER:-anthropic}|g" \
+      -e "s|__HERMES_ARBITER_MODEL__|${ARBITER_MODEL:-claude-sonnet-4-20250514}|g" \
+      -e "s|__HERMES_ARBITER_CHAIN_0__|${ARBITER_CHAIN_0:-claude-sonnet-4-20250514}|g" \
+      -e "s|__HERMES_ARBITER_CHAIN_1__|${ARBITER_CHAIN_1:-deepseek/deepseek-chat}|g" \
+      -e "s|__HERMES_ARBITER_CHAIN_2__|${ARBITER_CHAIN_2:-ollama/llama3}|g" \
+      -e "s|__HERMES_REFLECTOR_PROVIDER__|${REFLECTOR_PROVIDER:-openrouter}|g" \
+      -e "s|__HERMES_REFLECTOR_MODEL__|${REFLECTOR_MODEL:-deepseek/deepseek-chat}|g" \
+      -e "s|__HERMES_REFLECTOR_CHAIN_0__|${REFLECTOR_CHAIN_0:-deepseek/deepseek-chat}|g" \
+      -e "s|__HERMES_REFLECTOR_CHAIN_1__|${REFLECTOR_CHAIN_1:-ollama/llama3}|g" \
+      -e "s|__HERMES_REFLECTOR_CHAIN_2__|${REFLECTOR_CHAIN_2:-}|g" \
+      -e "s|__HERMES_PROFILE_REFLECTOR__|${PROFILE_REFLECTOR:-reflector}|g" \
       "$1")
   # Multi-line YAML lists: use awk for the two remaining vars
   echo "$tmp" | awk -v a="$ALLOWED_YAML" -v f="$FORBIDDEN_YAML" '
@@ -326,23 +437,53 @@ else
   for i in $(seq 1 "$WORKER_COUNT"); do
     install_profile "${PROFILE_WORKER_PREFIX}-${i}" "templates/config.worker.yaml" "templates/SOUL.worker.md"
   done
+  install_profile "$PROFILE_CHALLENGER" "templates/config.challenger.yaml" "templates/SOUL.challenger.md"
+  install_profile "$PROFILE_ARBITER" "templates/config.arbiter.yaml" "templates/SOUL.arbiter.md"
+  install_profile "$PROFILE_REFLECTOR" "templates/config.reflector.yaml" "templates/SOUL.reflector.md"
+  say "reflector profile: $PROFILE_REFLECTOR (shadow mode by default, active only after containment verified)"
 
   # ----------------------------- gate script ----------------------------------
   if $DRY_RUN; then
     dry "mkdir -p $HERMES_SCRIPTS"
     dry "sub templates/scripts/tick-gate.sh > $HERMES_SCRIPTS/${TICK_NAME}-gate.sh"
     dry "chmod +x $HERMES_SCRIPTS/${TICK_NAME}-gate.sh"
+    dry "cp templates/scripts/self-grade-diff.py $HERMES_SCRIPTS/self-grade-diff.py"
+    dry "chmod +x $HERMES_SCRIPTS/self-grade-diff.py"
+    dry "cp templates/scripts/prereg-lock.py $HERMES_SCRIPTS/prereg-lock.py"
+    dry "chmod +x $HERMES_SCRIPTS/prereg-lock.py"
   else
     mkdir -p "$HERMES_SCRIPTS"
     sub "$HERE/templates/scripts/tick-gate.sh" > "$HERMES_SCRIPTS/${TICK_NAME}-gate.sh"
     chmod +x "$HERMES_SCRIPTS/${TICK_NAME}-gate.sh"
     say "gate script installed: $HERMES_SCRIPTS/${TICK_NAME}-gate.sh"
+    # ── Deterministic gate scripts (templated) ─────────────────
+    for script in self-grade-diff.py prereg-lock.py; do
+      src="$HERE/templates/scripts/$script"
+      [ -f "$src" ] || die "Required script missing: $src"
+      sub "$src" > "$HERMES_SCRIPTS/$script"
+      chmod +x "$HERMES_SCRIPTS/$script"
+      say "gate script installed: $HERMES_SCRIPTS/$script"
+    done
+    # ── v0.5 runtime scripts (templated — substituted for placeholders) ──
+    for script in blame-propagation.py provenance-track.py feature-flags.py \
+                  containment-engine.py reflector-dispatch.sh \
+                  analogy-channel.py dream-channel.py whisper-channel.py \
+                  calibration-channel.py channel-budget.py channel-dispatch.py \
+                  readiness-check.py tick-journal.py tick-runtime.py; do
+      src="$HERE/templates/scripts/$script"
+      [ -f "$src" ] || die "Required v0.5 script missing: $src"
+      sub "$src" > "$HERMES_SCRIPTS/$script"
+      chmod +x "$HERMES_SCRIPTS/$script" 2>/dev/null || true
+    done
+    say "v0.5 runtime scripts installed (with template substitution)"
   fi
 
   # ----------------------------- repo ledger ----------------------------------
   LEDGER="$REPO_DIR/$LEDGER_DIR"
   if $DRY_RUN; then
-    dry "mkdir -p $LEDGER/{hypotheses,runs,reports}"
+    dry "mkdir -p $LEDGER/{hypotheses,runs,reports,challenger,arbiter,locks}"
+    dry "mkdir -p $LEDGER/{beliefs,provenance,reflector}"
+    dry "mkdir -p $LEDGER/{whispers,analogies,dreams}"
     dry "sub templates/control.yaml > $LEDGER/control.yaml (only if missing)"
     dry "sub templates/state.json > $LEDGER/state.json (only if missing)"
     if [ -n "$ADAPTER" ]; then
@@ -354,12 +495,19 @@ else
       dry "sub templates/AGENTS.md > $REPO_DIR/AGENTS.md (only if missing)"
     fi
   else
-    mkdir -p "$LEDGER"/{hypotheses,runs,reports}
+    mkdir -p "$LEDGER"/{hypotheses,runs,reports,challenger,arbiter,locks}
+    mkdir -p "$LEDGER"/{beliefs,provenance,reflector}
+    mkdir -p "$LEDGER"/{whispers,analogies,dreams}
     if [ ! -f "$LEDGER/control.yaml" ]; then
       sub "$HERE/templates/control.yaml" > "$LEDGER/control.yaml"
     fi
     if [ ! -f "$LEDGER/state.json" ]; then
       sub "$HERE/templates/state.json" > "$LEDGER/state.json"
+      say "state.json created (v2 with v0.5 defaults)"
+    fi
+    if [ ! -f "$LEDGER/beliefs.yaml" ]; then
+      sub "$HERE/templates/beliefs.yaml" > "$LEDGER/beliefs.yaml"
+      say "beliefs.yaml created (empty v0.5 workspace)"
     fi
     if [ -n "$ADAPTER" ]; then
       adapter_hyp="$HERE/adapters/$ADAPTER/hypotheses.seed.yaml"
@@ -428,92 +576,81 @@ fi
 # ----------------------------- registry update --------------------------------
 HEPHAESTUS_DIR="${HEPHAESTUS_DIR:-$HOME/.hephaestus}"
 REGISTRY_FILE="$HEPHAESTUS_DIR/registry.yaml"
-REGISTRY_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || python -c "from datetime import datetime; print(datetime.utcnow().isoformat()+'Z')" 2>/dev/null || echo "$(date +%Y-%m-%dT%H:%M:%SZ)")
+REGISTRY_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+BUILD_PROFILES="[$PROFILE_ORCH,"
+for i in $(seq 1 $WORKER_COUNT); do BUILD_PROFILES="$BUILD_PROFILES ${PROFILE_WORKER_PREFIX}-${i},"; done
+BUILD_PROFILES="$BUILD_PROFILES $PROFILE_CHALLENGER, $PROFILE_ARBITER, $PROFILE_REFLECTOR]"
 
 if $DRY_RUN; then
   dry "update registry at $REGISTRY_FILE"
   dry "  register: $PROJECT_NAME ($REPO_DIR)"
+  dry "  profiles: $BUILD_PROFILES"
 else
   mkdir -p "$HEPHAESTUS_DIR"
 
-  # Build YAML entry
-  REGISTRY_ENTRY="
-  - name: \"$PROJECT_NAME\"
-    adapter: \"${ADAPTER:-default}\"
-    repo: \"$REPO_DIR\"
-    ledger: \"$LEDGER_DIR\"
-    board: \"$BOARD_NAME\"
-    tick: \"$TICK_NAME\"
-    profiles: [$PROFILE_ORCH$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", ${PROFILE_WORKER_PREFIX}-${i}"; done)]
-    status: \"active\"
-    goal_status: \"none\"
-    registered_at: \"$REGISTRY_TIMESTAMP\"
-    updated_at: \"$REGISTRY_TIMESTAMP\""
+  # Use a single Python heredoc — clean, no nested quoting
+  python3 << PYEOF 2>&1
+import json, os, yaml
 
-  if [ -f "$REGISTRY_FILE" ] && grep -q "repo: \"$REPO_DIR\"" "$REGISTRY_FILE" 2>/dev/null; then
-    # Update existing entry — simple approach: remove old entry, append new
-    python -c "
-import re, yaml
-with open('$REGISTRY_FILE', encoding='utf-8') as f:
-    content = f.read()
-registry = yaml.safe_load(content) or {'schema_version': 1, 'projects': []}
-if not isinstance(registry, dict): registry = {'schema_version': 1, 'projects': []}
-if 'projects' not in registry: registry['projects'] = []
-# Remove existing entry with this repo
-registry['projects'] = [p for p in registry['projects'] if p.get('repo') != '$REPO_DIR']
+# Read values from environment (safe — no shell quoting issues)
+project = "$PROJECT_NAME"
+adapter = "${ADAPTER:-default}"
+repo = "$REPO_DIR"
+ledger = "$LEDGER_DIR"
+board = "$BOARD_NAME"
+tick = "$TICK_NAME"
+ts = "$REGISTRY_TIMESTAMP"
+
+# Build profile list from env
+profile_names = $BUILD_PROFILES
+
+registry_file = "$REGISTRY_FILE"
+
+# Load existing or create new
+if os.path.exists(registry_file):
+    with open(registry_file, encoding='utf-8') as f:
+        content = f.read()
+    registry = yaml.safe_load(content) or {'schema_version': 1, 'projects': []}
+    if not isinstance(registry, dict) or 'projects' not in registry:
+        registry = {'schema_version': 1, 'projects': []}
+    # Find existing entry by repo
+    existing_registered_at = ts
+    for p in registry['projects']:
+        if p.get('repo') == repo:
+            existing_registered_at = p.get('registered_at', ts)
+            break
+    # Remove old entry (idempotent)
+    registry['projects'] = [p for p in registry['projects'] if p.get('repo') != repo]
+else:
+    registry = {'schema_version': 1, 'projects': []}
+    existing_registered_at = ts
+
 # Add new entry
-import json
-entry = json.loads('''$(python -c "
-import json
-print(json.dumps({
-    'name': '$PROJECT_NAME',
-    'adapter': '${ADAPTER:-default}',
-    'repo': '$REPO_DIR',
-    'ledger': '$LEDGER_DIR',
-    'board': '$BOARD_NAME',
-    'tick': '$TICK_NAME',
-    'profiles': ['$PROFILE_ORCH'$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", '${PROFILE_WORKER_PREFIX}-${i}'"; done)],
+entry = {
+    'name': project,
+    'adapter': adapter,
+    'repo': repo,
+    'ledger': ledger,
+    'board': board,
+    'tick': tick,
+    'profiles': profile_names,
     'status': 'active',
     'goal_status': 'none',
-    'registered_at': '$REGISTRY_TIMESTAMP',
-    'updated_at': '$REGISTRY_TIMESTAMP',
-}))
-''')
-)
-registry['projects'].append(entry)
-with open('$REGISTRY_FILE', 'w', encoding='utf-8') as f:
-    yaml.dump(registry, f, indent=2, default_flow_style=False, allow_unicode=True)
-print('Registry updated for $PROJECT_NAME')
-" 2>&1
-    say "registry updated: $PROJECT_NAME (existing entry)"
-  else
-    # Create new registry
-    mkdir -p "$HEPHAESTUS_DIR"
-    # Use python for YAML write
-    python -c "
-import yaml
-registry = {
-    'schema_version': 1,
-    'projects': [{
-        'name': '$PROJECT_NAME',
-        'adapter': '${ADAPTER:-default}',
-        'repo': '$REPO_DIR',
-        'ledger': '$LEDGER_DIR',
-        'board': '$BOARD_NAME',
-        'tick': '$TICK_NAME',
-        'profiles': ['$PROFILE_ORCH'$(for i in $(seq 1 $WORKER_COUNT); do echo -n ", '${PROFILE_WORKER_PREFIX}-${i}'"; done)],
-        'status': 'active',
-        'goal_status': 'none',
-        'registered_at': '$REGISTRY_TIMESTAMP',
-        'updated_at': '$REGISTRY_TIMESTAMP',
-    }]
+    'registered_at': existing_registered_at,
+    'updated_at': ts,
 }
-with open('$REGISTRY_FILE', 'w', encoding='utf-8') as f:
+registry['projects'].append(entry)
+
+with open(registry_file, 'w', encoding='utf-8') as f:
     yaml.dump(registry, f, indent=2, default_flow_style=False, allow_unicode=True)
-print('Registry created at $REGISTRY_FILE')
-" 2>&1
-    say "registry written: $PROJECT_NAME -> $REGISTRY_FILE"
-  fi
+
+if os.path.exists(registry_file):
+    print(f'Registry updated for {project}')
+else:
+    print(f'Registry created at {registry_file}')
+PYEOF
+  say "registry: $PROJECT_NAME -> $REGISTRY_FILE"
 fi
 
 # ----------------------------- summary --------------------------------------
@@ -525,7 +662,7 @@ if [ "$SETUP_MODE" = "custom" ]; then
   say "setup:      custom (adapter: ${ADAPTER:-default})"
 else
   say "mode:       orchestrator"
-  say "profiles:   $PROFILE_ORCH, ${PROFILE_WORKER_PREFIX}-1..${WORKER_COUNT}"
+  say "profiles:   $PROFILE_ORCH, ${PROFILE_WORKER_PREFIX}-1..${WORKER_COUNT}, $PROFILE_CHALLENGER, $PROFILE_ARBITER, $PROFILE_REFLECTOR"
   say "tick:       $TICK_NAME ($TICK_SCHEDULE)"
 fi
 say "board:      $BOARD_NAME"

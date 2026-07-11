@@ -1,0 +1,47 @@
+name: v0.5 Kaizen Engine CI
+
+on:
+  pull_request:
+    branches: [master, main]
+  push:
+    branches: [feat/v05-kaizen-engine]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Install deps
+        run: pip install pyyaml jsonschema
+      - name: Shell syntax
+        run: bash -n bootstrap.sh && for s in templates/scripts/*.sh; do bash -n "$s"; done
+      - name: Python syntax
+        run: find templates/scripts -maxdepth 1 -name '*.py' -exec python3 -m py_compile {} \; && find schema/tests -name '*.py' -exec python3 -m py_compile {} \;
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+      - name: Bootstrap TS dry-run
+        run: |
+          mkdir -p /tmp/hep-ci && cd /tmp/hep-ci && git init -q && mkdir -p src
+          echo "print(1)" > src/main.py
+          bun "$GITHUB_WORKSPACE/bootstrap.ts" /tmp/hep-ci --adapter v7-alphaforge --dry-run
+      - name: Bootstrap bash dry-run
+        run: |
+          mkdir -p /tmp/hep-bash && cd /tmp/hep-bash && git init -q && mkdir -p src
+          echo "print(1)" > src/main.py
+          bash "$GITHUB_WORKSPACE/bootstrap.sh" --dry-run /tmp/hep-bash --adapter v7-alphaforge
+      - name: Schema + Phase 0 tests
+        run: |
+          python3 schema/tests/test_schema_validation.py
+          python3 schema/tests/test_events_schema.py
+          python3 schema/tests/test_goal_engine.py
+          python3 schema/tests/test_self_grade_diff.py
+          python3 schema/tests/test_prereg_lock.py
+          python3 schema/tests/test_decorrelation.py
+      - name: Correction + canary
+        run: python3 schema/tests/test_correction_pass.py && python3 schema/tests/test_canary_suite.py
+      - name: CI integration checks
+        run: python3 schema/tests/test_ci_integration.py

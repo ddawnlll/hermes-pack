@@ -1,21 +1,32 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/ddawnlll/hephaestus/schema/state.schema.json",
-  "title": "Hermes State Schema",
-  "description": "Versioned schema for Hermes orchestrator state.json. All tools MUST validate state against this schema before writing.",
+  "title": "Hephaestus State Schema",
+  "description": "Versioned schema for Hephaestus orchestrator state.json. All tools MUST validate state against this schema before writing.",
   "type": "object",
   "properties": {
     "schema_version": {
       "type": "integer",
       "description": "Schema version number. Bump when making backward-incompatible changes.",
       "minimum": 1,
-      "default": 1
+      "default": 2
     },
     "tick": {
       "type": "integer",
       "description": "Current tick number (monotonically increasing).",
       "minimum": 0,
       "default": 0
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Current run identifier for crash recovery and idempotency.",
+      "default": ""
+    },
+    "phase": {
+      "type": "string",
+      "description": "Current phase within the tick for crash recovery.",
+      "enum": ["idle", "running", "dispatch", "wait_workers", "verify", "reflect", "consolidate", "complete"],
+      "default": "idle"
     },
     "worker_status": {
       "type": "object",
@@ -67,6 +78,162 @@
       "description": "Current goal status from goal.yaml evaluation.",
       "enum": ["in_progress", "achieved", "blocked", "exhausted", "none"],
       "default": "none"
+    },
+    "beliefs": {
+      "type": "object",
+      "description": "Beliefs workspace summary. capacity must always be 12 (contractual active-workspace limit).",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "Current number of beliefs.",
+          "minimum": 0,
+          "default": 0
+        },
+        "capacity": {
+          "type": "integer",
+          "description": "Maximum active beliefs. Contractually locked at exactly 12.",
+          "minimum": 12,
+          "maximum": 12,
+          "default": 12
+        },
+        "active_count": {
+          "type": "integer",
+          "description": "Number of active (not suspect/refuted/evicted) beliefs.",
+          "minimum": 0,
+          "default": 0
+        },
+        "suspect_count": {
+          "type": "integer",
+          "description": "Number of suspect beliefs.",
+          "minimum": 0,
+          "default": 0
+        },
+        "last_eviction": {
+          "type": ["string", "null"],
+          "description": "ISO 8601 timestamp of last eviction, or null.",
+          "format": "date-time",
+          "default": null
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "stagnation": {
+      "type": "integer",
+      "description": "Global stagnation counter — ticks without any positive outcome.",
+      "minimum": 0,
+      "default": 0
+    },
+    "momentum": {
+      "type": "number",
+      "description": "Global momentum score. Positive = system making progress. Negative = regressing. Zero = neutral.",
+      "default": 0
+    },
+    "features": {
+      "type": "object",
+      "description": "Feature flags for gradual rollout.",
+      "properties": {
+        "reflector": {
+          "type": "string",
+          "description": "Reflector mode: shadow (proposals only, no mutations) or active (writes beliefs).",
+          "enum": ["shadow", "active", "disabled"],
+          "default": "shadow"
+        },
+        "suspect_enforcement": {
+          "type": "boolean",
+          "description": "When true, suspect beliefs actually block dependent dispatch.",
+          "default": false
+        },
+        "analogy_channel": {
+          "type": "boolean",
+          "description": "Enable analogy channel.",
+          "default": false
+        },
+        "dream_channel": {
+          "type": "boolean",
+          "description": "Enable dream/replay channel.",
+          "default": false
+        },
+        "affect_modulation": {
+          "type": "boolean",
+          "description": "Enable affect/calibration modulation.",
+          "default": false
+        },
+        "whisper_channel": {
+          "type": "boolean",
+          "description": "Enable whisper/briefing channel.",
+          "default": false
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "channel_budgets": {
+      "type": "object",
+      "description": "Daily budget tracking per channel.",
+      "properties": {
+        "reflector": { "type": "number", "minimum": 0, "default": 0.50 },
+        "analogy": { "type": "number", "minimum": 0, "default": 0.25 },
+        "dream": { "type": "number", "minimum": 0, "default": 0.15 },
+        "whisper": { "type": "number", "minimum": 0, "default": 0.10 },
+        "calibration": { "type": "number", "minimum": 0, "default": 0.20 }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "channel_spend_today": {
+      "type": "object",
+      "description": "Channel spend tracking for the current day.",
+      "properties": {
+        "reflector": { "type": "number", "minimum": 0, "default": 0 },
+        "analogy": { "type": "number", "minimum": 0, "default": 0 },
+        "dream": { "type": "number", "minimum": 0, "default": 0 },
+        "whisper": { "type": "number", "minimum": 0, "default": 0 },
+        "calibration": { "type": "number", "minimum": 0, "default": 0 }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "channel_spend_date": {
+      "type": "string",
+      "description": "UTC date string (YYYY-MM-DD) of the last channel spend reset. When the UTC date changes, all channel_spend_today counters auto-reset.",
+      "default": ""
+    },
+    "calibration": {
+      "type": "object",
+      "description": "Calibration scores (Brier-based) for prediction accuracy.",
+      "properties": {
+        "brier_score": {
+          "type": "number",
+          "description": "Current Brier score (0=perfect, 1=worst).",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.5
+        },
+        "predictions_total": {
+          "type": "integer",
+          "description": "Total number of predictions made.",
+          "minimum": 0,
+          "default": 0
+        },
+        "calibration_curve": {
+          "type": "array",
+          "description": "Binned calibration data for reliability diagrams.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "bin": { "type": "integer", "description": "Confidence bin (0-9 for 0.0-0.9)." },
+              "count": { "type": "integer", "description": "Number of predictions in this bin." },
+              "accuracy": { "type": "number", "description": "Observed accuracy in this bin." }
+            },
+            "required": ["bin", "count", "accuracy"],
+            "additionalProperties": false
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
     }
   },
   "required": ["schema_version", "tick"],

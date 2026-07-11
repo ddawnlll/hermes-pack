@@ -1,0 +1,207 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ddawnlll/hephaestus/schema/beliefs.schema.json",
+  "title": "Hephaestus Beliefs Workspace Schema",
+  "description": "Schema for beliefs.yaml — the capacity-limited active workspace of consolidated beliefs. Active capacity: exactly 12 beliefs. Historical evicted/refuted beliefs live in a separate append-only audit ledger. Only the Reflector writes beliefs. Every belief must have a falsifiable kill_criterion.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "description": "Schema version number. Bump when making backward-incompatible changes.",
+      "minimum": 1,
+      "default": 1
+    },
+    "beliefs": {
+      "type": "array",
+      "description": "Active broadcast workspace. Exactly 12 beliefs maximum. Beliefs with status 'evicted' or 'refuted' must be moved to the historical_beliefs array and do not consume this capacity.",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique belief identifier (e.g. BEL-001)."
+          },
+          "statement": {
+            "type": "string",
+            "description": "The belief statement — a falsifiable claim about the codebase or process."
+          },
+          "kill_criterion": {
+            "type": "string",
+            "description": "Falsifiable condition that would invalidate this belief. Mandatory — beliefs without kill_criterion are invalid."
+          },
+          "confidence": {
+            "type": "string",
+            "description": "Confidence level based on evidence strength.",
+            "enum": ["high", "medium", "low", "speculative"],
+            "default": "medium"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current belief lifecycle status. Only 'active' beliefs count toward the 12-item capacity.",
+            "enum": ["active", "suspect", "refuted", "evicted"],
+            "default": "active"
+          },
+          "stagnation": {
+            "type": "integer",
+            "description": "Number of ticks since this belief last produced a positive outcome. Monotonically increasing while dormant.",
+            "minimum": 0,
+            "default": 0
+          },
+          "momentum": {
+            "type": "number",
+            "description": "Momentum score for this belief. Positive = reinforcing evidence accumulating. Negative = erosion. Zero = neutral.",
+            "default": 0
+          },
+          "ttl": {
+            "type": "integer",
+            "description": "Time-to-live in ticks. When TTL expires, suspect enforcement ends automatically unless Reflector re-justifies with new evidence.",
+            "minimum": 1,
+            "default": 24
+          },
+          "suspect_age": {
+            "type": "integer",
+            "description": "Ticks spent in suspect status. When suspect_age >= TTL, enforcement expires.",
+            "minimum": 0,
+            "default": 0
+          },
+          "cooldown_remaining": {
+            "type": "integer",
+            "description": "Ticks remaining in cooldown after a frame shift or ratchet direction change. Zero = not in cooldown. Survives process restart via durable state.",
+            "minimum": 0,
+            "default": 0
+          },
+          "frame_shift_count": {
+            "type": "integer",
+            "description": "Number of direction changes within the oscillation window. Used for anti-oscillation hysteresis.",
+            "minimum": 0,
+            "default": 0
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 creation timestamp.",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 last updated timestamp.",
+            "format": "date-time"
+          },
+          "blamed_by": {
+            "type": "array",
+            "description": "Hypothesis IDs whose FAIL has directly propagated blame to this belief. Appended, never duplicated (idempotent).",
+            "items": { "type": "string" },
+            "default": []
+          },
+          "provenance": {
+            "type": "array",
+            "description": "Provenance trail — records of what evidence/channels created or modified this belief.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": { "type": "string" },
+                "hypothesis_id": { "type": "string", "default": "" },
+                "run_id": { "type": "string", "default": "" },
+                "timestamp": { "type": "string", "format": "date-time" },
+                "summary": { "type": "string" }
+              },
+              "required": ["source", "timestamp"],
+              "additionalProperties": false
+            },
+            "default": []
+          },
+          "evidence_refs": {
+            "type": "array",
+            "description": "References to evidence ledger records supporting this belief.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "record_id": { "type": "string" },
+                "type": { "type": "string" },
+                "summary": { "type": "string" }
+              },
+              "required": ["record_id", "type"],
+              "additionalProperties": false
+            },
+            "default": []
+          },
+          "ratchet_audit": {
+            "type": "array",
+            "description": "Audit log of ratchet transitions. Each entry records the direction, notch, verdict_window, and timestamp. Survives restart.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "timestamp": { "type": "string", "format": "date-time" },
+                "direction": { "type": "string", "enum": ["tighten", "loosen", "reverse"] },
+                "notch": { "type": "integer" },
+                "verdict_window": { "type": "integer", "description": "Index of the R-verdict window in which this change occurred." },
+                "evidence_summary": { "type": "string" }
+              },
+              "required": ["timestamp", "direction"],
+              "additionalProperties": false
+            },
+            "default": []
+          }
+        },
+        "required": ["id", "statement", "kill_criterion", "created_at"],
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "capacity": {
+      "type": "object",
+      "description": "Workspace capacity tracking. The active workspace is capped at 12 beliefs. Historical evicted/refuted beliefs go to historical_beliefs (unbounded).",
+      "properties": {
+        "max_active_beliefs": {
+          "type": "integer",
+          "description": "Exactly 12 active beliefs maximum.",
+          "minimum": 12,
+          "maximum": 12,
+          "default": 12
+        },
+        "eviction_strategy": {
+          "type": "string",
+          "enum": ["lowest_confidence", "oldest_active", "highest_stagnation", "lru"],
+          "default": "lowest_confidence"
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "historical_beliefs": {
+      "type": "array",
+      "description": "Append-only ledger of evicted/refuted beliefs. Does NOT count toward the 12-item active workspace capacity.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "statement": { "type": "string" },
+          "status": { "type": "string", "enum": ["evicted", "refuted"] },
+          "eviction_reason": {
+            "type": "object",
+            "properties": {
+              "timestamp": { "type": "string", "format": "date-time" },
+              "evidence_refs": { "type": "array", "items": { "type": "string" } }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "statement", "status"],
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "narrative": {
+      "type": "string",
+      "description": "One-page bounded causal summary. Rewritten (never append-only) by the Reflector each consolidation cycle. Ledger remains the source of truth. Must cite ledger/hypothesis/belief IDs.",
+      "default": ""
+    },
+    "updated_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp of last update.",
+      "format": "date-time"
+    }
+  },
+  "required": ["schema_version", "beliefs"],
+  "additionalProperties": false
+}

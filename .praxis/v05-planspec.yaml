@@ -1,0 +1,129 @@
+# PRAXIS PlanSpec v0.1 — Hephaestus v0.5 Kaizen Engine
+planSpecVersion: "0.1.0"
+kind: "ImplementationPlan"
+profile: "praxis-v0.1"
+
+metadata:
+  planId: "HEPHAESTUS-V05-KAIZEN-ENGINE"
+  title: "Hephaestus v0.5 Kaizen Engine — Full Implementation"
+  description: "Complete 21-issue roadmap: schema core, containment, reflector, channels, runtime reliability"
+  createdAt: "2026-07-10T20:28:40.664101Z"
+  humanId: "autonomous-agent"
+  status: "complete"
+
+authority:
+  executor: "autonomous-agent"
+  completionAuthority: "PraxisTruthKernel"
+  criteriaSourceRequired: "human"
+
+workspace:
+  root: "."
+  allowedFiles:
+    - "schema/*.json"
+    - "templates/*"
+    - "templates/scripts/*"
+    - "templates/prompts/*"
+    - "adapters/*"
+    - "bootstrap.sh"
+    - "bootstrap.ts"
+    - "schema/tests/*"
+    - ".github/workflows/*"
+  forbiddenFiles: []
+
+execution:
+  mode: "single_session"
+  agent: "autonomous-agent"
+  autonomy: "implementation_allowed"
+  canModifyCode: true
+  canModifyPlan: false
+  canModifyAcceptanceCriteria: false
+  maxRepairLoops: 0
+
+tasks:
+  - id: "task-schema-core"
+    title: "Schema Core (#56, #58, #69, #60)"
+    objective: "beliefs.yaml workspace, relies_on + provenance, stagnation/momentum"
+    acceptanceCriteria:
+      - "beliefs.schema.json has maxItems=12 for active workspace"
+      - "historical_beliefs array exists for evicted/refuted beliefs"
+      - "Every belief has mandatory kill_criterion"
+      - "hypothesis.schema.json requires relies_on field"
+      - "provenance.schema.json tracks entity_type, channel, cost"
+      - "state.schema.json v2 has features, channel_budgets, calibration"
+    budget:
+      maxAttempts: 1
+
+  - id: "task-containment"
+    title: "Containment (#61, #62, #63, #64)"
+    objective: "Authority matrix, suspect TTL, eviction, cooldown/hysteresis"
+    acceptanceCriteria:
+      - "Authority matrix: 28/28 role pairs covered"
+      - "Suspect TTL actually expires enforcement (status→active)"
+      - "Eviction requires evidence trail (timestamp + refs)"
+      - "Ratchet: max 1 notch per R-window"
+      - "Direction reversal requires 3 consecutive supporting verdicts"
+      - "All 6 blocking states have timeout + HOLD default"
+    budget:
+      maxAttempts: 1
+
+  - id: "task-reflector"
+    title: "Reflector Rollout (#57, #59, #60, #70)"
+    objective: "Reflector agent, narrative memory, feature flags, stagnation/momentum"
+    acceptanceCriteria:
+      - "Reflector SOUL requires model decorrelation"
+      - "Shadow mode writes proposals, not canonical beliefs"
+      - "Active mode blocked without readiness-check"
+      - "Narrative is REWRITTEN (not append-only)"
+      - "Feature flags: default safe (reflector=shadow, all channels disabled)"
+      - "Disabled flag = zero spend, zero artifacts"
+    budget:
+      maxAttempts: 1
+
+  - id: "task-channels"
+    title: "Discovery Channels (#65, #66, #67, #68)"
+    objective: "Analogy, dream/replay, whisper/context, calibration/affect"
+    acceptanceCriteria:
+      - "All channels independently feature-flagged (default disabled)"
+      - "Separate daily budgets with centralized enforcement"
+      - "Provenance recorded before output enters triage"
+      - "External input is UNTRUSTED (never modifies canonical beliefs)"
+      - "Calibration rewards Brier score, not agreement"
+      - "Affect bounds: frustration/confidence/boredom all [0,1]"
+    budget:
+      maxAttempts: 1
+
+  - id: "task-runtime"
+    title: "Runtime Reliability (#71, #72)"
+    objective: "Transaction journal, crash recovery, canary suite"
+    acceptanceCriteria:
+      - "tick-journal.py: atomic write+rename, integrity checks"
+      - "tick-runtime.py: recovers existing interrupted journals"
+      - "budget accounting: file lock, UTC daily reset, op-key dedup"
+      - "Canary suite: 11 scenarios, all pass"
+      - "CI workflow: 10 steps, bash + Python + bootstrap dry-run + integration"
+    budget:
+      maxAttempts: 1
+
+commands:
+  exactAllowedCommands: []
+  deniedCommands: []
+
+evidence:
+  requiredEvidenceTypes: ["source", "test_output", "diff"]
+  hashWhenAvailable: true
+
+gates:
+  sequence: ["SchemaGate", "LockGate", "EvidenceGate", "WiringGate", "ExecGate", "FinalGate"]
+  verdicts: ["PASS", "HOLD", "FAIL"]
+
+repair:
+  enabled: false
+
+locking:
+  lockVersion: "praxis-plan-lock/v0.1"
+  autoCreate: true
+
+reports:
+  format: markdown
+  includeEvidence: true
+  includeGateVerdicts: true
