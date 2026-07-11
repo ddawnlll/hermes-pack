@@ -1,0 +1,163 @@
+# PRAXIS PlanSpec v0.1 — Issue #29: ROI/Exploitation Throttle
+planSpecVersion: "0.1.0"
+kind: "ImplementationPlan"
+profile: "praxis-v0.1"
+
+metadata:
+  planId: "HERMES-29"
+  title: "ROI/exploitation-throttle (ölü aileyi tekrar öğütmeyi keser)"
+  description: "ROI gate only throttles re-mining of refuted hypothesis families. Novel hypotheses never throttled."
+  createdAt: "2026-07-09T08:00:00Z"
+  humanId: "hermes-agent"
+  status: "draft"
+
+authority:
+  executor: "ClaudeCode"
+  completionAuthority: "PraxisTruthKernel"
+  agentSelfReportIsClaimOnly: true
+  criteriaSourceRequired: "human"
+  reportsAreEvidenceOnly: true
+  pluginOwnsTruth: false
+
+workspace:
+  root: "."
+  allowedFiles:
+    - "templates/roi-gate.py"
+    - "templates/roi-gate.sh"
+    - "schema/tests/test_roi_gate.py"
+    - "bootstrap.ts"
+    - ".praxis/*"
+  forbiddenFiles: []
+
+execution:
+  mode: "single_session"
+  agent: "claude-code"
+  autonomy: "implementation_allowed"
+  canModifyCode: true
+  canModifyPlan: false
+  canModifyAcceptanceCriteria: false
+  maxRepairLoops: 2
+
+tasks:
+  - id: "task-roi-gate"
+    title: "ROI Gate"
+    objective: "ROI/exploitation throttle for refuted hypothesis re-mining"
+    implementation:
+      instructions:
+        - "roi-gate.py at templates/roi-gate.py"
+        - "roi-gate.sh at templates/roi-gate.sh"
+        - "Test at schema/tests/test_roi_gate.py"
+      expectedOutputs:
+        - "All acceptance criteria met"
+    artifactPolicy:
+      class: "library_code"
+      wiringRequired: false
+      reachabilityRequired: false
+      executionRequired: true
+      deterministicEvidenceRequired: true
+      advisoryReviewAllowed: false
+    acceptanceCriteria:
+      - id: "AC-1"
+        description: "ROI gate only detects re-mining of refuted families"
+        level: "required"
+        humanApproved: true
+        criteriaSource: "human"
+        verification:
+          type: "test_output"
+          commandRef: "CMD-TEST-ROI"
+          deterministic: true
+          canSatisfyFinalGate: true
+          advisoryOnly: false
+          evidenceRefs:
+            - "command"
+        requiredEvidence:
+          - "command"
+      - id: "AC-2"
+        description: "New hypotheses never throttled"
+        level: "required"
+        humanApproved: true
+        criteriaSource: "human"
+        verification:
+          type: "test_output"
+          commandRef: "CMD-TEST-ROI"
+          deterministic: true
+          canSatisfyFinalGate: true
+          advisoryOnly: false
+          evidenceRefs:
+            - "command"
+        requiredEvidence:
+          - "command"
+      - id: "AC-3"
+        description: "High-variance discovery not suppressed"
+        level: "required"
+        humanApproved: true
+        criteriaSource: "human"
+        verification:
+          type: "test_output"
+          commandRef: "CMD-TEST-ROI"
+          deterministic: true
+          canSatisfyFinalGate: true
+          advisoryOnly: false
+          evidenceRefs:
+            - "command"
+        requiredEvidence:
+          - "command"
+
+commands:
+  exactAllowedCommands:
+    - id: "CMD-TEST-ROI"
+      kind: "final_validation"
+      command: "python schema/tests/test_roi_gate.py"
+      evidenceRequired: true
+      timeoutSeconds: 60
+      noTestsFoundIsFailure: true
+      expectedExitCode: 0
+      networkAllowed: false
+      shellAllowed: true
+  validationEvidenceRules:
+    finalPromotionRequiresExactAllowedCommand: true
+    discoveryCommandsMayNotSatisfyFinalValidation: true
+    runtimeGrantCommandsCanSatisfyValidationOnlyIfGrantStatesValidationPurpose: true
+  hardDeniedCommands:
+    - command: "rm -rf"
+      reason: "Destructive."
+
+evidence:
+  ledgerRequired: true
+  requiredEvidenceTypes: ["diff", "source", "command", "test_output"]
+  hashWhenAvailable: true
+
+gates:
+  sequence: ["SchemaGate", "LockGate", "EvidenceGate", "WiringGate", "ExecGate", "FinalGate"]
+  verdicts: ["PASS", "HOLD", "FAIL"]
+  reasonCodes:
+    SchemaGate: ["SCHEMA_PASS"]
+    EvidenceGate: ["EVIDENCE_MISSING"]
+    ExecGate: ["TESTS_RAN_ZERO"]
+    FinalGate: ["ALL_CRITERIA_MET", "CRITERIA_PARTIAL"]
+
+repair:
+  enabled: true
+  failedCriteriaOnly: true
+  mayModifyAcceptanceCriteria: false
+  mayModifyPlan: false
+  allowedFilesFromFailedTasksOnly: true
+  maxRepairLoops: 2
+  reverifyCommand: "python schema/tests/test_roi_gate.py"
+  repairPacketFormat:
+    json: true
+    markdown: true
+
+locking:
+  lockRequired: true
+  canonicalHashRequired: true
+  planLockFile: ".praxis/issue-29.lock"
+  hashes: ["planHash", "acceptanceCriteriaHash", "artifactPolicyHash", "commandPolicyHash", "allowedFilesHash", "forbiddenFilesHash"]
+
+reports:
+  protocol: "ACCP"
+  artifactDirectory: "reports/"
+  reportsAreEvidenceOnly: true
+  reportsDoNotAuthorizeExecution: true
+  commandEvidenceRequired: true
+  repairPacketRequiredOnHoldOrFail: true

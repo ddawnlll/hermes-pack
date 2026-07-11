@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "level": 0,
+  "blocking_ratio": 0.0,
+  "window_size": 20,
+  "history": [],
+  "last_updated": null
+}
