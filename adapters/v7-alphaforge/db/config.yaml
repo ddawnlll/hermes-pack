@@ -1,0 +1,15 @@
+# adapters/v7-alphaforge/db/config.yaml
+# Per-adapter Postgres config (DL-1, #95).
+#
+# Loaded by db.connection.connect() when adapter="v7-alphaforge".
+# Environment variables (PGHOST, PGPORT, ...) override these defaults.
+# password_file: path to a file containing the password (one line, no
+# trailing newline); the file is read at connect time. This keeps the
+# password out of process listings.
+
+adapter: v7-alphaforge
+host: localhost
+port: 5432
+user: postgres
+dbname: hephaestus
+# password_file: ~/.config/hephaestus/v7-alphaforge.pgpass
